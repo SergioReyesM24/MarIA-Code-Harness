@@ -107,6 +107,14 @@ export class ChatSession implements vscode.Disposable, HostView {
 				this.post({ type: "sessionProposals", counts: this.#proposalCounts() });
 			}),
 			examplePrompts.onDidChange(() => this.post({ type: "examplePrompts", ...examplePrompts.get() })),
+			vscode.workspace.onDidChangeConfiguration(event => {
+				if (
+					event.affectsConfiguration("ompCustom.longPasteLines") ||
+					event.affectsConfiguration("ompCustom.longPasteChars")
+				) {
+					this.#postSettings();
+				}
+			}),
 		);
 	}
 
@@ -185,6 +193,12 @@ export class ChatSession implements vscode.Disposable, HostView {
 		if (host.sessionFile === this.#shownSessionFile) return;
 		this.#shownSessionFile = host.sessionFile;
 		this.pool.seen(host.sessionFile);
+	}
+
+	/** The settings the webview folds long text with (`ompCustom.longPasteLines` and `ompCustom.longPasteChars`). */
+	#postSettings(): void {
+		const { longPasteLines, longPasteChars } = readConfig();
+		this.post({ type: "settings", longPasteLines, longPasteChars });
 	}
 
 	/**
@@ -512,6 +526,7 @@ export class ChatSession implements vscode.Disposable, HostView {
 			case "ready":
 				this.#webviewReady = true;
 				this.post({ type: "examplePrompts", ...this.examplePrompts.get() });
+				this.#postSettings();
 				this.#postProposals(true);
 				this.post({ type: "sessionActivity", activity: this.pool.activities() });
 				this.post({ type: "sessionProposals", counts: this.#proposalCounts() });

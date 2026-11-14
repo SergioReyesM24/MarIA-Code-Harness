@@ -32,6 +32,7 @@ import { type DraftMention, expandDraftMentions, updateDraftMentions } from "./d
 import { EnhancePrompt } from "./enhance-prompt";
 import { GhostText, syncMirrorStyles } from "./ghost-text";
 import { openLightbox } from "./lightbox";
+import { countLines, isLongText } from "./long-text";
 import { mentionToken, replaceMention } from "./mention-token";
 import { ModelPicker } from "./model-picker";
 import { PlanRunPanel } from "./plan-run-panel";
@@ -65,14 +66,35 @@ export interface ComposerOptions {
 	promptHistory(): readonly PromptRecall[];
 }
 
-/** What the composer keeps across webview reloads: the draft, the excerpt it replies to, and its compact mentions. */
+/** What the composer keeps across webview reloads: the draft, the excerpt it replies to, its compact mentions, and its folded pastes. */
 export interface ComposerState {
 	draft: string;
 	quote?: string;
 	/** Compact `@name` mentions in the draft and the full mentions they send. */
 	mentions?: DraftMention[];
+	/** Long pasted texts waiting to be sent after the draft, in paste order. */
+	pastes?: string[];
 }
 
+/** A long pasted text folded into a card above the input; `expanded` shows it whole for editing. */
+interface PastedText {
+	id: number;
+	text: string;
+	expanded: boolean;
+}
+
+/** The first lines of a folded paste, as its card shows them. */
+function previewLines(text: string): string {
+	return text.replace(/\n+$/, "").split("\n").slice(0, PASTE_PREVIEW_LINES).join("\n");
+}
+
+/** "320 líneas · 12.4 KB": what a folded paste's card says about it. */
+function pasteSummary(text: string): string {
+	const lines = countLines(text);
+	return `${lines} ${lines === 1 ? "línea" : "líneas"} · ${(text.length / 1024).toFixed(1)} KB`;
+}
+
+const PASTE_PREVIEW_LINES = 3;
 const MAX_SUGGESTIONS = 50;
 const PLACEHOLDER = "Pregunta lo que quieras a MarIA Code. / para comandos y skills";
 const PLACEHOLDER_BUSY = "Pide cambios adicionales";
@@ -186,6 +208,9 @@ export class Composer {
 	#busy = false;
 	/** Pasted images sent with the next prompt. */
 	#images: ImageContent[] = [];
+	/** Long pasted texts sent with the next prompt, after the draft. */
+	#pastes: PastedText[] = [];
+	#pasteSeq = 0;
 	#attachments = h("div", { className: "attachments", hidden: true });
 	#dictation: DictationControl;
 	/** A streaming speech model's running transcript, shown above the input while recording. */
@@ -273,6 +298,8 @@ export class Composer {
 		});
 		this.#quote = initial.quote;
 		this.#renderQuote();
+		this.#pastes = (initial.pastes ?? []).map(text => ({ id: ++this.#pasteSeq, text, expanded: false }));
+		this.#renderAttachments();
 		// Typing ends browsing; programmatic changes fire no `input` event.
 		this.#input.addEventListener("input", () => {
 			this.#historyIndex = -1;
@@ -682,13 +709,23 @@ export class Composer {
 	}
 
 	#save(): void {
-		this.saveState({ draft: this.#input.value, quote: this.#quote, mentions: this.#draftMentions });
+		this.saveState({
+			draft: this.#input.value,
+			quote: this.#quote,
+			mentions: this.#draftMentions,
+			pastes: this.#pastes.map(paste => paste.text),
+		});
+	}
+
+	/** The folded pastes that have text, in paste order. */
+	#pastedTexts(): string[] {
+		return this.#pastes.map(paste => paste.text).filter(text => text.trim() !== "");
 	}
 
 	#refresh(): void {
 		this.#input.style.height = "auto";
 		this.#input.style.height = `${this.#input.scrollHeight}px`;
-		const hasContent = this.#input.value.trim() !== "" || this.#images.length > 0;
+		const hasContent = this.#input.value.trim() !== "" || this.#images.length > 0 || this.#pastedTexts().length > 0;
 		this.#stop.hidden = !this.#busy;
 		this.#send.hidden = this.#busy && !hasContent;
 		// While "Mejorar prompt" works on the draft it is read-only and cannot be sent.
@@ -718,7 +755,13 @@ export class Composer {
 
 	#submit(): void {
 		const text = expandDraftMentions(this.#input.value, this.#draftMentions);
-		if ((text.trim() === "" && this.#images.length === 0) || this.#input.disabled || this.#input.readOnly) return;
+		const pasted = this.#pastedTexts();
+		if (
+			(text.trim() === "" && this.#images.length === 0 && pasted.length === 0) ||
+			this.#input.disabled ||
+			this.#input.readOnly
+		)
+			return;
 		const command = /^\s*\/(\S+)\s*([\s\S]*)$/.exec(text);
 		const name = command?.[1];
 		const local = this.#local.get(name ?? "");
@@ -733,13 +776,16 @@ export class Composer {
 					entry => entry.source !== "skill" && (entry.name === name || entry.aliases?.includes(name)),
 				);
 			const quote = isCommand ? undefined : this.#quote;
-			const sent = quote === undefined ? text : quotedPrompt(quote, text);
+			// The folded pastes follow the typed text, so a command or skill still starts the prompt.
+			const body = pasted.length === 0 ? text : [text, ...pasted].filter(part => part.trim() !== "").join("\n\n");
+			const sent = quote === undefined ? body : quotedPrompt(quote, body);
 			this.post(
 				this.#images.length > 0
 					? { type: "prompt", text: sent, images: this.#images }
 					: { type: "prompt", text: sent },
 			);
 			this.#images = [];
+			this.#pastes = [];
 			this.#renderAttachments();
 			if (quote !== undefined) {
 				this.#quote = undefined;
@@ -762,7 +808,17 @@ export class Composer {
 			.filter(item => item.kind === "file" && item.type.startsWith("image/"))
 			.map(item => item.getAsFile())
 			.filter((file): file is File => file !== null);
-		if (files.length === 0) return;
+		if (files.length === 0) {
+			// A long text folds into a card above the input instead of filling the textarea.
+			const text = data.getData("text/plain");
+			if (!isLongText(text)) return;
+			event.preventDefault();
+			this.#pastes.push({ id: ++this.#pasteSeq, text, expanded: false });
+			this.#renderAttachments();
+			this.#refresh();
+			this.#save();
+			return;
+		}
 		if (!data.types.includes("text/plain")) event.preventDefault();
 		for (const file of files) {
 			void readImage(file).then(
@@ -776,8 +832,69 @@ export class Composer {
 		}
 	}
 
+	/** A long pasted text: a card with its first lines, or the whole text in an editor once expanded. */
+	#pasteCard(paste: PastedText): HTMLElement {
+		const meta = h("span", { className: "paste-meta" }, pasteSummary(paste.text));
+		const toggle = h(
+			"button",
+			{
+				type: "button",
+				className: "paste-toggle",
+				ariaExpanded: String(paste.expanded),
+				dataset: { tooltip: paste.expanded ? "Plegar" : "Ver y editar" },
+			},
+			icon(paste.expanded ? "chevronDown" : "chevronRight"),
+			h("span", { className: "paste-title" }, "Texto pegado"),
+			meta,
+		);
+		toggle.addEventListener("click", () => {
+			paste.expanded = !paste.expanded;
+			this.#renderAttachments();
+			if (paste.expanded) {
+				this.#attachments.querySelector<HTMLTextAreaElement>(`[data-paste="${paste.id}"] textarea`)?.focus();
+			}
+		});
+		const remove = iconButton("close", "Quitar texto pegado", () => {
+			this.#pastes = this.#pastes.filter(entry => entry !== paste);
+			this.#renderAttachments();
+			this.#refresh();
+			this.#save();
+			this.focus();
+		});
+		const body = paste.expanded
+			? this.#pasteEditor(paste, meta)
+			: h("pre", { className: "paste-preview" }, previewLines(paste.text));
+		return h(
+			"div",
+			{ className: "paste-card", dataset: { paste: String(paste.id) } },
+			h("div", { className: "paste-head" }, toggle, remove),
+			body,
+		);
+	}
+
+	/** The whole pasted text, editable; edits go back into the card and the next prompt. */
+	#pasteEditor(paste: PastedText, meta: HTMLElement): HTMLTextAreaElement {
+		const editor = h("textarea", { className: "paste-editor", ariaLabel: "Texto pegado", spellcheck: false });
+		editor.value = paste.text;
+		const grow = () => {
+			editor.style.height = "auto";
+			editor.style.height = `${editor.scrollHeight}px`;
+		};
+		editor.addEventListener("input", () => {
+			paste.text = editor.value;
+			meta.textContent = pasteSummary(paste.text);
+			grow();
+			this.#refresh();
+			this.#save();
+		});
+		// Sized once the card is in the page: a detached element has no scroll height yet.
+		requestAnimationFrame(grow);
+		return editor;
+	}
+
 	#renderAttachments(): void {
 		this.#attachments.replaceChildren(
+			...this.#pastes.map(paste => this.#pasteCard(paste)),
 			...this.#images.map((image, index) => {
 				const remove = iconButton("close", "Remove image", () => {
 					this.#images.splice(index, 1);
@@ -802,7 +919,7 @@ export class Composer {
 				return h("div", { className: "attachment" }, preview, remove);
 			}),
 		);
-		this.#attachments.hidden = this.#images.length === 0;
+		this.#attachments.hidden = this.#images.length === 0 && this.#pastes.length === 0;
 	}
 
 	/** The excerpt the next prompt replies to, with a button dropping it. */
@@ -937,7 +1054,8 @@ export class Composer {
 		}
 		if (step === 1) {
 			if (this.#historyIndex === -1) {
-				const empty = value === "" && this.#images.length === 0 && this.#quote === undefined;
+				const empty =
+					value === "" && this.#images.length === 0 && this.#pastes.length === 0 && this.#quote === undefined;
 				if (!empty || entries.length === 0) return false;
 			} else if (value.slice(0, selectionStart).includes("\n")) {
 				return false;

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- A paste longer than 200 lines folds into a card above the composer ("Texto pegado · 320 líneas · 12.4 KB") with its first lines; "Ver y editar" shows the whole text to change it and the chevron folds it again, and it is sent after what you typed. Sent prompts over the same length fold in their bubble with "Mostrar todo" and "Plegar". The limits are `ompCustom.longPasteChars` (200 characters) and `ompCustom.longPasteLines` (200 lines); `0` turns either one off
+
 ## [0.40.1]
 
 ### Changed

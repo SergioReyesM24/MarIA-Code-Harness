@@ -21,6 +21,10 @@ export function readConfig() {
 		askAlertSound: config.get<SoundMode>("askAlertSound", "always"),
 		/** Spoken language for voice input as an ISO 639-1 code; `""` lets the speech model detect it. */
 		voiceLanguage: voiceLanguage(config.get<string>("voiceLanguage", "auto")),
+		/** Lines over which pasted text and sent prompts fold (`0` never folds). */
+		longPasteLines: longPasteLimit(config.get<number>("longPasteLines", 200), 200),
+		/** Characters over which pasted text and sent prompts fold, so one very long line folds too (`0` ignores length). */
+		longPasteChars: longPasteLimit(config.get<number>("longPasteChars", 200), 200),
 		/** Folder chats without a workspace run in (see no-workspace.ts); may start with `~`. */
 		noWorkspaceFolder: config.get<string>("noWorkspaceFolder", "~/omp-sin-workspace").trim() || "~/omp-sin-workspace",
 	};
@@ -29,6 +33,10 @@ export function readConfig() {
 function voiceLanguage(value: string): string {
 	const code = value.trim().toLowerCase();
 	return code === "auto" ? "" : code;
+}
+
+function longPasteLimit(value: number, fallback: number): number {
+	return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : fallback;
 }
 
 /** The workspace folder omp works in: the active editor's folder, else the first one, else home. */
