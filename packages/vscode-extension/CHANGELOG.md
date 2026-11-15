@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.41.0]
+
+### Added
+
+- A new chat shows "Ponle nombre a este chat" under the greeting: name the chat before the first prompt and MarIA Code keeps that name instead of generating a title from your first message; once named, the pill shows the name and clicking it edits it
+
+### Changed
+
+- The greeting of a new chat in a workspace now reads "¿Qué quieres construir, arreglar o entender con MarIA Code?"
+
+### Fixed
+
+- Right-clicking a file path or link in an answer now offers "Copiar ruta" / "Copiar enlace"; before, the menu's Copy did nothing because a right click selects no text
+- The prompts under the logo of a new chat are now centred (their text was left-aligned inside a centred block, so the list looked shifted to the left)
+
 ## [0.40.1]
 
 ### Changed

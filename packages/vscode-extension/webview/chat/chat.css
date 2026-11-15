@@ -379,7 +379,21 @@ code {
 	display: none;
 }
 
-.new-tab-item {
+.link-menu {
+	position: fixed;
+	z-index: 50;
+	min-width: 140px;
+	padding: 4px;
+	display: flex;
+	flex-direction: column;
+	border-radius: var(--r-sm);
+	border: 1px solid var(--c-border-heavy);
+	background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+	box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+}
+
+.new-tab-item,
+.link-menu-item {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -395,7 +409,9 @@ code {
 }
 
 .new-tab-item:hover,
-.new-tab-item:focus-visible {
+.new-tab-item:focus-visible,
+.link-menu-item:hover,
+.link-menu-item:focus-visible {
 	background: var(--vscode-list-hoverBackground);
 	outline: none;
 }
@@ -1815,6 +1831,72 @@ code {
 	font-weight: 500;
 }
 
+/* "Ponle nombre a este chat" under the greeting: a dashed pill until named, then the name in a solid accent pill. */
+.chat-name {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	max-width: 360px;
+	margin: 2px 0 6px;
+}
+
+.chat-name-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	max-width: 100%;
+	height: 26px;
+	padding: 0 12px;
+	border: 1px dashed var(--c-border-heavy);
+	border-radius: 9999px;
+	background: transparent;
+	color: var(--c-fg-3);
+	font-size: var(--fs-sm);
+}
+
+.chat-name-button:hover {
+	border-color: var(--omp-accent);
+	color: var(--c-fg);
+}
+
+.chat-name-button:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+}
+
+.chat-name-button.named {
+	border-style: solid;
+	border-color: color-mix(in srgb, var(--omp-accent) 45%, transparent);
+	background: color-mix(in srgb, var(--omp-accent) 8%, transparent);
+	color: var(--c-fg);
+	font-weight: 500;
+}
+
+.chat-name-button .icon {
+	flex: none;
+	width: 12px;
+	height: 12px;
+}
+
+.chat-name-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.chat-name-input {
+	width: 100%;
+	height: 26px;
+	padding: 0 12px;
+	border: 1px solid var(--vscode-focusBorder);
+	border-radius: 9999px;
+	background: var(--vscode-input-background);
+	color: var(--c-fg);
+	font-size: var(--fs-sm);
+	text-align: center;
+	outline: none;
+}
+
 .empty-hint {
 	color: var(--c-fg-3);
 	font-size: var(--fs-sm);
@@ -1945,7 +2027,7 @@ code {
 	border-radius: var(--r-md);
 	background: transparent;
 	color: var(--c-fg-2);
-	text-align: left;
+	text-align: center;
 	line-height: 1.4;
 	white-space: normal;
 	overflow-wrap: anywhere;

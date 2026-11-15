@@ -20,6 +20,7 @@ import { h, iconButton } from "../dom";
 import { icon } from "../icons";
 import { setTooltip } from "../tooltip";
 import { fileLink, handleMarkdownClick, thumbnail } from "./content";
+import { ChatName } from "./chat-name";
 import { ExamplePrompts } from "./example-prompts";
 import { openLightbox } from "./lightbox";
 import { playFarewell, preloadFarewell } from "./logo-farewell";
@@ -353,8 +354,10 @@ export class Transcript {
 	#empty: HTMLElement;
 	/** The empty chat's prompts under the logo. */
 	readonly examples: ExamplePrompts;
+	/** "Ponle nombre a este chat" under the greeting, so the user names the session before the first prompt. */
+	readonly chatName: ChatName;
 	#brand = h("div", { className: "empty-brand", role: "img", ariaLabel: "MarIA Code · Unicaja" });
-	#emptyTitle = h("div", { className: "empty-title" }, "¿Qué construimos hoy con MarIA Code?");
+	#emptyTitle = h("div", { className: "empty-title" }, "¿Qué quieres construir, arreglar o entender con MarIA Code?");
 	#emptyHint = h(
 		"div",
 		{ className: "empty-hint" },
@@ -424,11 +427,13 @@ export class Transcript {
 		private readonly planFeedback: PlanFeedbackDialog,
 	) {
 		this.examples = new ExamplePrompts(post, onExample);
+		this.chatName = new ChatName(post);
 		this.#empty = h(
 			"div",
 			{ className: "empty" },
 			this.#brand,
 			this.#emptyTitle,
+			this.chatName.element,
 			this.#place,
 			this.#emptyHint,
 			this.examples.element,
@@ -478,7 +483,7 @@ export class Transcript {
 		playFarewell({
 			brand: this.#brand,
 			empty: this.#empty,
-			captions: [this.#emptyTitle, this.#place, this.#emptyHint, this.examples.element],
+			captions: [this.#emptyTitle, this.chatName.element, this.#place, this.#emptyHint, this.examples.element],
 			conversation: [this.#list, this.#working],
 			mark,
 			onDone: () => {
@@ -588,7 +593,7 @@ export class Transcript {
 		if (this.#place.dataset.place === kind && this.#place.dataset.folder === folder) return;
 		this.#emptyTitle.textContent = noWorkspace
 			? "¿En qué te ayudo hoy con MarIA Code?"
-			: "¿Qué construimos hoy con MarIA Code?";
+			: "¿Qué quieres construir, arreglar o entender con MarIA Code?";
 		const name = noWorkspace ? "Tareas generales" : folder.split(/[\\/]/).filter(Boolean).pop() || folder;
 		const switchTo = h(
 			"button",

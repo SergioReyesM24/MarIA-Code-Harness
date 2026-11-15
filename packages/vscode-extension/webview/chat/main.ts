@@ -12,6 +12,7 @@ import { Composer, type ComposerState } from "./composer";
 import { Header } from "./header";
 import { HistoryPanel } from "./history";
 import { FindBar } from "./find";
+import { installLinkContextMenu } from "./link-menu";
 import { PlanFeedbackDialog } from "./plan-feedback";
 import { Transcript, brailleSpinner } from "./transcript";
 
@@ -86,6 +87,7 @@ const find = new FindBar(transcript.searchRoot, transcript.scrollElement);
 const root = document.getElementById("root")!;
 root.classList.add("chat");
 installTooltips();
+installLinkContextMenu();
 const main = h("div", { className: "main" }, transcript.element, find.element, statusPanel, history.element);
 // Questions from omp cover this chat (transcript and composer), not the header with the History and new chats.
 const askDialog = new AskDialog(post, () => composer.cancelDictation(), [main, composer.element]);
@@ -190,6 +192,7 @@ function handle(update: ChatUpdate): void {
 			history.setChatNoWorkspace(update.noWorkspace);
 			transcript.setChangesAvailable(!update.noWorkspace);
 			transcript.setPlace(update.noWorkspace, update.folder);
+			transcript.chatName.set(update.title || state.sessionName);
 			composer.picker.setCurrent(state.model);
 			if (state.thinkingLevel) composer.picker.setThinkingLevel(state.thinkingLevel);
 			composer.setUsage(state, update.stats);
