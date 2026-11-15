@@ -142,40 +142,40 @@ for (const mode of ["TUI", "headless"] as const) {
 			expect(session.sessionName).toBe("Cache invalidation repair");
 		});
 
-		it("keeps the current title's card on a generated title without asking for a new one", async () => {
+		it("keeps the current title's emoji on a generated title without asking for a new one", async () => {
 			const { session, sessionManager, runtime, execute } = createRuntime(mode);
 			cfgTitleIcons.override(runtime.settings, "emoji");
-			await sessionManager.setSessionName("🧪 CACHE: Fix cache writes", "auto");
+			await sessionManager.setSessionName("🧪 Fix cache writes", "auto");
 			const generate = vi.spyOn(tinyTitleClient, "generate").mockResolvedValue("Cache invalidation repair");
 
 			await execute("/rename");
 
-			expect(session.sessionName).toBe("🧪 CACHE: Cache invalidation repair");
+			expect(session.sessionName).toBe("🧪 Cache invalidation repair");
 			expect(generate).toHaveBeenCalledTimes(1);
 		});
 
-		it("heads a typed or generated title without a card with one the title model names", async () => {
+		it("heads a typed or generated title without an emoji with one the title model names", async () => {
 			const { session, runtime, execute } = createRuntime(mode);
 			cfgTitleIcons.override(runtime.settings, "emoji");
 			const generate = vi
 				.spyOn(tinyTitleClient, "generate")
 				.mockImplementation(async (_model, _message, options) =>
-					options && "systemPrompt" in options ? "🗄 CACHE" : "Cache invalidation repair",
+					options && "systemPrompt" in options ? "🗄 Cache" : "Cache invalidation repair",
 				);
 
 			await execute("/rename");
-			expect(session.sessionName).toBe("🗄️ CACHE: Cache invalidation repair");
+			expect(session.sessionName).toBe("🗄️ Cache invalidation repair");
 
 			await execute("/rename Cache ownership");
-			expect(session.sessionName).toBe("🗄️ CACHE: Cache ownership");
+			expect(session.sessionName).toBe("🗄️ Cache ownership");
 			expect(generate.mock.calls.at(-1)?.[1]).toBe("Cache ownership");
 
-			await execute("/rename 🐳 DOCKER: Docker builds");
-			expect(session.sessionName).toBe("🐳 DOCKER: Docker builds");
+			await execute("/rename 🐳 Docker builds");
+			expect(session.sessionName).toBe("🐳 Docker builds");
 			expect(generate).toHaveBeenCalledTimes(3);
 		});
 
-		it("applies a typed title without its card when an interrupt cancels the card", async () => {
+		it("applies a typed title without its emoji when an interrupt cancels the card", async () => {
 			const { session, runtime, execute } = createRuntime(mode);
 			cfgTitleIcons.override(runtime.settings, "emoji");
 			const { started, response } = deferTitle();
@@ -183,7 +183,7 @@ for (const mode of ["TUI", "headless"] as const) {
 			try {
 				await Promise.race([started.promise, pending]);
 				await session.abort();
-				response.resolve("🗄 CACHE");
+				response.resolve("🗄 Cache");
 				await pending;
 				expect(session.sessionName).toBe("Cache ownership");
 			} finally {

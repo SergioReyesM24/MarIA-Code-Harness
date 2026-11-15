@@ -52,7 +52,7 @@ import { cfgProvidersTinyModelDevice, cfgProvidersTinyModelDtype } from "../sess
 
 const TITLE_PREFILL = "<title>";
 const TITLE_CLOSE = "</title>";
-const TITLE_MAX_NEW_TOKENS = 20;
+const TITLE_MAX_NEW_TOKENS = 40;
 const COMPLETION_DEFAULT_MAX_NEW_TOKENS = 256;
 const COMPLETION_MAX_NEW_TOKENS = 1024;
 const TINY_TITLE_SYSTEM_PROMPT = prompt.render(titleSystemPrompt);

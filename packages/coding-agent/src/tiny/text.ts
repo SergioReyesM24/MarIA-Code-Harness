@@ -201,14 +201,14 @@ export function isAttachmentOnlyTitleInput(message: string): boolean {
 export const NO_TITLE_SENTINEL = "none";
 
 /**
- * Upper bounds on an accepted title. Titling is a 3-7 word task, so any output
+ * Upper bounds on an accepted title. Titling is an 8-10 word task, so any output
  * past these limits is a model that ignored the task and answered the user's
  * message instead — its whole reply must not become the session title (issue
  * #7303). Rejecting (return null) lets the caller defer titling to the next
  * user turn; truncating would keep half an assistant blob, which is still an
  * assistant blob.
  */
-const MAX_TITLE_CHARS = 80;
+const MAX_TITLE_CHARS = 120;
 const MAX_TITLE_WORDS = 12;
 
 export function normalizeGeneratedTitle(value: string | null | undefined, sourceText?: string): string | null {

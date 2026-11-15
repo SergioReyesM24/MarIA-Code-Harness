@@ -54,8 +54,10 @@
 
 ### Changed
 
+- Generated session titles are now one emoji followed by an 8-10 word title (`🐳 Speed up the Docker image builds in the CI pipeline`) instead of an icon, a short code and a 3-6 word title. The `title.icons` setting keeps `emoji` (default) and `boring`; the Nerd Font glyph option (`nf+emoji`) and the bundled Nerd Font glyph catalog are gone, and titles already saved in the old `<icon> <CODE>: <title>` form stay as they are.
 - "Mejorar prompt" follows stricter rewrite rules with worked examples: a vague reference is replaced only when the context holds exactly one match (several or none go to the ambiguities), verbs, reasons, hedges, language and register are kept, and `<ambiguities>` is always present in the model's output
 - Skill curation requests sent to Unicaja's LiteLLM gateway (`driver-ia.*.unicajasc.corp`) now carry `"no-log": true`, so LiteLLM keeps them out of its logging callbacks and spend logs
+- Session title requests (the forked title turn and the title model) sent to Unicaja's LiteLLM gateway now carry `"no-log": true` too
 - Manual `/compact` now honors a preferred `handoff` method, reusing the live prompt prefix for its summary before falling back to soft compaction ([#3](https://github.com/javimp2003/oh-my-pi/pull/3) by [@alvarogarciapiz](https://github.com/alvarogarciapiz))
 - Messages from other agents (IRC mail) now reach the model as user turns attributed to the sending agent instead of developer-authority messages
 - Auto-QA tool-issue reporting (`dev.autoqa`) is now off by default and `dev.autoqaPush.endpoint` is empty by default, so no grievances are recorded or pushed until you enable it and configure an endpoint

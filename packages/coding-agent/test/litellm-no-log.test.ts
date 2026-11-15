@@ -1,6 +1,9 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it, vi } from "bun:test";
+import * as ai from "@oh-my-pi/pi-ai";
 import { buildModel } from "@oh-my-pi/pi-catalog/build";
+import { Settings } from "../src/config/settings";
 import { noLogPayload } from "../src/utils/litellm-no-log";
+import { generateSessionTitle } from "../src/utils/title-generator";
 
 describe("requests on the driver-ia gateway", () => {
 	const modelAt = (baseUrl: string) =>
@@ -35,5 +38,32 @@ describe("requests on the driver-ia gateway", () => {
 		]) {
 			expect(noLogPayload(body, modelAt(baseUrl))).toBe(body);
 		}
+	});
+
+	describe("session titles", () => {
+		afterEach(() => vi.restoreAllMocks());
+
+		it("asks LiteLLM not to log the title model's request", async () => {
+			const model = modelAt("https://driver-ia.ub-banco-conversacional-pro.unicajasc.corp");
+			const complete = vi.spyOn(ai, "completeSimple").mockResolvedValue({
+				stopReason: "stop",
+				content: [{ type: "text", text: "<title>Revisar resolver</title>" }],
+			} as never);
+			const registry = {
+				getAvailable: () => [model],
+				getApiKey: async () => "key",
+				resolver: () => async () => "key",
+			};
+
+			const title = await generateSessionTitle(
+				"revisa el resolver de modelos",
+				registry as never,
+				Settings.isolated({ modelRoles: { tiny: "driver-ia/oss-coder-pro" } }),
+			);
+
+			expect(title).toBe("Revisar resolver");
+			const options = complete.mock.calls[0]?.[2];
+			expect(await options?.onPayload?.(body, model)).toEqual({ ...body, "no-log": true });
+		});
 	});
 });

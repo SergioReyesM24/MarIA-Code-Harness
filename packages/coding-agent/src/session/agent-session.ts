@@ -271,7 +271,8 @@ import {
 	parseCardTitleReply,
 	splitCardTitle,
 } from "../utils/title-card";
-import { generateSessionTitle, nerdGlyphsActive } from "../utils/title-generator";
+import { generateSessionTitle } from "../utils/title-generator";
+import { noLogPayload } from "../utils/litellm-no-log";
 import { buildNamedToolChoice, isToolChoiceActive } from "../utils/tool-choice";
 import type { VibeModeState } from "../vibe/state";
 import type { AgentSessionEvent, AgentSessionEventListener } from "./agent-session-events";
@@ -542,7 +543,7 @@ import {
 	cfgExtendedContext,
 	cfgWorkspaceAdditionalDirectories,
 } from "./context-settings";
-import { cfgTitleGenerator, cfgTitleIcons, cfgTitleRefreshOnReplan, type TitleIcons } from "../utils/title-settings";
+import { cfgTitleGenerator, cfgTitleIcons, cfgTitleRefreshOnReplan } from "../utils/title-settings";
 import {
 	cfgAsyncEnabled,
 	cfgArchiveEnabled,
@@ -9799,7 +9800,7 @@ export class AgentSession implements SettingsScope {
 	 * Under `title.generator: fork` the request is an ephemeral side turn forked
 	 * from the streaming reply on the same model, system prompt, tools and
 	 * prompt-cache key, so it reads the whole prefix from cache, sees the model's
-	 * own reading of the task, and asks for a card (icon and code, unless
+	 * own reading of the task, and asks for a card (an emoji, unless
 	 * `title.icons` is `boring`) to head the title. The title model
 	 * ({@link generateTitle}) takes over when the fork fails, times out or
 	 * declines, and is the only path under `tiny` or a TITLE_SYSTEM.md override.
@@ -9841,13 +9842,11 @@ export class AgentSession implements SettingsScope {
 		this.#titleGenerationInFlightFor = sessionId;
 		const signal = this.#titleGenerationAbortController.signal;
 		const started = performance.now();
-		const icons = this.#cardIcons();
+		const icons = cfgTitleIcons.get(this.settings);
 		this.runEphemeralTurn({
-			promptText: prompt.render(titleForkPrompt, {
-				card: icons !== "boring",
-				nerdFonts: icons === "nf+emoji",
-			}),
+			promptText: prompt.render(titleForkPrompt, { card: icons !== "boring" }),
 			signal: AbortSignal.any([signal, AbortSignal.timeout(TITLE_FORK_TIMEOUT_MS)]),
+			noLog: true,
 		})
 			.then(
 				async ({ replyText, assistantMessage }) => {
@@ -9884,12 +9883,6 @@ export class AgentSession implements SettingsScope {
 					error: err instanceof Error ? err.message : String(err),
 				});
 			});
-	}
-
-	/** The icons a new card may show: `title.icons`, an emoji where Nerd Fonts glyphs do not render, no card when boring. */
-	#cardIcons(): TitleIcons {
-		const icons = cfgTitleIcons.get(this.settings);
-		return icons === "nf+emoji" && !nerdGlyphsActive() ? "emoji" : icons;
 	}
 
 	#fallBackFromTitleFork(input: TitleInput, signal: AbortSignal): void {
@@ -10050,7 +10043,7 @@ export class AgentSession implements SettingsScope {
 	 * still applies, without the card it was waiting for).
 	 */
 	async renameTitle(title?: string, signal?: AbortSignal): Promise<string | null | undefined> {
-		const icons = this.#cardIcons();
+		const icons = cfgTitleIcons.get(this.settings);
 		const needsCard = (name: string) => icons !== "boring" && !splitCardTitle(name);
 		if (title && !needsCard(title)) return title;
 		const context = title ? undefined : this.#buildReplanTitleContext();
@@ -10066,7 +10059,7 @@ export class AgentSession implements SettingsScope {
 		const named = context === undefined ? title : await this.#retitle(context, signal);
 		if (stale()) return undefined;
 		if (!named || !needsCard(named)) return named ?? null;
-		const cardPrompt = prompt.render(titleCardPrompt, { nerdFonts: icons === "nf+emoji" });
+		const cardPrompt = prompt.render(titleCardPrompt);
 		const reply = await this.generateTitle(named, cardPrompt, signal);
 		if (stale()) return undefined;
 		const card = reply ? parseCardReply(reply, icons) : undefined;
@@ -11666,6 +11659,7 @@ export class AgentSession implements SettingsScope {
 				hideThinkingSummary: this.agent.hideThinkingSummary,
 				serviceTier: this.#models.effectiveServiceTier(model),
 				maxTokens: args.maxTokens,
+				onPayload: args.noLog ? payload => noLogPayload(payload, model) : undefined,
 				signal: args.signal ? AbortSignal.any([args.signal, streamAbort.signal]) : streamAbort.signal,
 			},
 			model.provider,

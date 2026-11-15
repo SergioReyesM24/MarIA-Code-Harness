@@ -606,6 +606,8 @@ export interface EphemeralTurnOptions {
 	minimizeEffort?: boolean;
 	/** Positive safe-integer UTF-8 byte cap. Reject before inference when the serialized post-transform, secret-obfuscated provider context exceeds it. Measured before `before_provider_request` hooks; payload replacements are not re-measured. */
 	maxContextBytes?: number;
+	/** On Unicaja's LiteLLM gateway, send LiteLLM's `"no-log": true` so the request stays out of its logs and spend records. */
+	noLog?: boolean;
 	/** Awaited in order; a delivery failure rejects the side turn and aborts the request. */
 	onTextDelta?: (delta: string) => void | Promise<void>;
 	signal?: AbortSignal;

@@ -33,7 +33,8 @@ afterEach(async () => {
 });
 
 const FIRST_MESSAGE = "fix the flaky park tests";
-const CARD_REPLY = '<title nf="nf-md-flask" emoji="🧪" code="FLAKY">Fix flaky park tests</title>';
+const CARD_REPLY = '<title emoji="🧪">Fix the flaky park tests that fail under parallel runs</title>';
+const CARD_TITLE = "🧪 Fix the flaky park tests that fail under parallel runs";
 
 /** A session whose main turns answer from `main` and whose side turns (the title fork) from `side`. */
 async function createSession(
@@ -87,7 +88,7 @@ describe("AgentSession title fork", () => {
 		await target.prompt(FIRST_MESSAGE);
 		await titled;
 
-		expect(target.sessionName).toBe("🧪 FLAKY: Fix flaky park tests");
+		expect(target.sessionName).toBe(CARD_TITLE);
 		expect(titleModel).not.toHaveBeenCalled();
 		const mainCall = main.calls[0]!;
 		const sideCall = side.calls[0]!;
@@ -143,7 +144,7 @@ describe("AgentSession title fork", () => {
 		titleModelReply.resolve(createAssistantMessage("<title/>"));
 		await titled;
 
-		expect(target.sessionName).toBe("🧪 FLAKY: Fix flaky park tests");
+		expect(target.sessionName).toBe(CARD_TITLE);
 		expect(side.calls).toHaveLength(2);
 		expect(titleModel).toHaveBeenCalledTimes(1);
 	});
@@ -198,7 +199,7 @@ describe("AgentSession title fork", () => {
 		await titled;
 		await run;
 
-		expect(target.sessionName).toBe("🧪 FLAKY: Fix flaky park tests");
+		expect(target.sessionName).toBe(CARD_TITLE);
 		expect(side.calls).toHaveLength(2);
 		expect(titleModel).not.toHaveBeenCalled();
 	});

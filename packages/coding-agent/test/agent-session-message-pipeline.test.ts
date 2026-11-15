@@ -1100,6 +1100,46 @@ describe("AgentSession message pipeline", () => {
 		expect(capturedOptions?.providerSessionState).toBe(session.providerSessionState);
 	});
 
+	it("asks Unicaja's LiteLLM not to log a side turn only when it requests noLog", async () => {
+		const api = "test-ephemeral-no-log";
+		const payloads: unknown[] = [];
+		registerCustomApi(api, (model, _context, options) => {
+			const stream = new AssistantMessageEventStream();
+			void (async () => {
+				payloads.push(await options?.onPayload?.({ model: model.id }, model));
+				const message = createAssistantMessage("Answer");
+				stream.push({ type: "text_delta", contentIndex: 0, delta: "Answer", partial: message });
+				stream.push({ type: "done", reason: "stop", message });
+			})();
+			return stream;
+		});
+		const model = buildModel({
+			id: "oss-coder-pro",
+			name: "oss-coder-pro",
+			api,
+			provider: "driver-ia",
+			baseUrl: "https://driver-ia.ub-banco-conversacional-pro.unicajasc.corp",
+			reasoning: false,
+			input: ["text"],
+			cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+			contextWindow: 4096,
+			maxTokens: 1024,
+		} as ModelSpec<Api>) as Model<Api>;
+		const session = new AgentSession({
+			agent: new Agent({ initialState: { model, systemPrompt: ["system prompt"], messages: [], tools: [] } }),
+			sessionManager: SessionManager.inMemory(),
+			settings: Settings.isolated({ "compaction.enabled": false }),
+			modelRegistry: createModelRegistryStub() as unknown as ModelRegistry,
+			onPayload: async payload => payload,
+		});
+		sessions.push(session);
+
+		await session.runEphemeralTurn({ promptText: "Title?", noLog: true });
+		await session.runEphemeralTurn({ promptText: "Question?" });
+
+		expect(payloads).toEqual([{ model: "oss-coder-pro", "no-log": true }, { model: "oss-coder-pro" }]);
+	});
+
 	it("preserves the provider prefix when ephemeral followups append structured history", async () => {
 		const model = buildModel({
 			id: "side-stream-model",

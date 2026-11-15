@@ -17,7 +17,6 @@ import {
 import { StreamMarkupHealing } from "@oh-my-pi/pi-ai/utils/stream-markup-healing";
 import { writeTerminalSequence } from "@oh-my-pi/pi-tui";
 import { isNativeRendering, onNativeRenderingChange } from "@oh-my-pi/pi-tui/native/state";
-import { theme } from "@oh-my-pi/pi-tui/theme";
 import { SPINNER_FRAMES } from "@oh-my-pi/pi-tui/theme/symbols";
 import { $env, isTerminalHeadless, isWsl, logger, prompt } from "@oh-my-pi/pi-utils";
 import type { ModelRegistry } from "../config/model-registry";
@@ -26,6 +25,7 @@ import { roleCandidatePool } from "../config/model-roles";
 import { formatModelStringWithRouting } from "../config/model-resolver";
 import { collectOnlineTinyCandidates, expandOnlineTinyModelFallbacks } from "../tiny/online-candidates";
 import type { Settings } from "../config/settings";
+import { noLogPayload } from "./litellm-no-log";
 import titleMarkerInstruction from "../prompts/system/title-marker-instruction.md" with { type: "text" };
 import titleSystemPrompt from "../prompts/system/title-system.md" with { type: "text" };
 import { formatTitleUserMessage } from "../tiny/message-preproc";
@@ -356,6 +356,7 @@ async function generateTitleOnlineWithModels(
 							temperature: 0,
 							metadata,
 							signal,
+							onPayload: payload => noLogPayload(payload, model),
 						},
 					),
 				{ signal, provider: model.provider },
@@ -637,8 +638,7 @@ function writeTerminalTitle(title: string, recomposeStaticOnFailure = false): vo
 
 /**
  * Set the session's base terminal title: the session name, which a generated
- * title carries in the card form `<icon> <CODE>: <name>` that Tern indexes
- * parked panes by, else the cwd.
+ * title carries in the card form `<emoji> <name>`, else the cwd.
  */
 export function setSessionTerminalTitle(sessionName: string | undefined, cwd?: string): void {
 	// An authoritative session title (rename, new session, focus swap) supersedes
@@ -656,14 +656,6 @@ export function setSessionTerminalTitle(sessionName: string | undefined, cwd?: s
 	terminalTitleRuntime.label = terminalTitleRuntime.sessionName ?? getFallbackTerminalTitle(cwd);
 	emitTerminalTitle();
 	reportTernSession();
-}
-
-/**
- * Whether the effective symbol preset is `nerd`: under `nf+emoji` title icons,
- * the title fork then asks the model for a Nerd Fonts glyph to head the title.
- */
-export function nerdGlyphsActive(): boolean {
-	return typeof theme !== "undefined" && theme.getSymbolPreset() === "nerd";
 }
 
 /** The OSC 1337 user variable Tern reads the session file from. */
