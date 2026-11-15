@@ -1,517 +1,187 @@
 <p align="center">
-  <img src="https://github.com/can1357/oh-my-pi/blob/main/assets/hero.png?raw=true" alt="omp">
+  <img src="packages/vscode-extension/media/maria-logo.png" alt="MarIA Code" width="180">
+</p>
+
+<h1 align="center">MarIA Code</h1>
+
+<p align="center">
+  <strong>El agente de programación de Unicaja para desarrolladores y empleados.</strong><br>
+  Un <em>coding agent harness</em> corporativo: terminal, VS Code y SDK sobre el mismo motor, conectado al gateway de modelos de Unicaja.
 </p>
 
 <p align="center">
-  <strong>A coding agent with the IDE wired in.</strong>
-  <strong><a href="https://omp.sh">omp.sh</a></strong>
+  <img src="https://img.shields.io/badge/uso-corporativo%20Unicaja-005B3E?style=flat&colorA=222222" alt="Uso corporativo Unicaja">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&colorA=222222&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Rust-DEA584?style=flat&colorA=222222&logo=rust&logoColor=white" alt="Rust">
+  <img src="https://img.shields.io/badge/runtime-Bun-f472b6?style=flat&colorA=222222" alt="Bun">
+  <img src="https://img.shields.io/badge/licencia-MIT-58A6FF?style=flat&colorA=222222" alt="MIT">
 </p>
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/@oh-my-pi/pi-coding-agent"><img src="https://img.shields.io/npm/v/@oh-my-pi/pi-coding-agent?style=flat&colorA=222222&colorB=CB3837" alt="npm version"></a>
-  <a href="https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-keep-E05735?style=flat&colorA=222222" alt="Changelog"></a>
-  <a href="https://github.com/can1357/oh-my-pi/actions"><img src="https://img.shields.io/github/actions/workflow/status/can1357/oh-my-pi/ci.yml?style=flat&colorA=222222&colorB=3FB950" alt="CI"></a>
-  <a href="https://github.com/can1357/oh-my-pi/blob/main/LICENSE"><img src="https://img.shields.io/github/license/can1357/oh-my-pi?style=flat&colorA=222222&colorB=58A6FF" alt="License"></a>
-  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&colorA=222222&logo=typescript&logoColor=white" alt="TypeScript"></a>
-  <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-DEA584?style=flat&colorA=222222&logo=rust&logoColor=white" alt="Rust"></a>
-  <a href="https://bun.sh"><img src="https://img.shields.io/badge/runtime-Bun-f472b6?style=flat&colorA=222222" alt="Bun"></a>
-  <a href="https://discord.gg/4NMW9cdXZa"><img src="https://img.shields.io/badge/Discord-5865F2?style=flat&colorA=222222&logo=discord&logoColor=white" alt="Discord"></a>
-</p>
+## Qué es
 
-<p align="center">
-  Built by <a href="https://stencil.so">Stencil Labs</a> · Fork of <a href="https://github.com/badlogic/pi-mono">Pi</a> by <a href="https://github.com/mariozechner">@mariozechner</a>
-</p>
+MarIA Code es la distribución corporativa de un agente de programación con LLM para el personal técnico de Unicaja. El agente lee y edita código, ejecuta comandos, usa el LSP y el depurador, lanza subagentes en paralelo y recuerda lo aprendido entre sesiones. Se maneja desde la terminal o desde un panel de chat en VS Code.
 
-The most capable agent surface that ships. Continuously tuned by real-world use — complete out of the box, open all the way down.
+Se compone de dos piezas:
 
-**60+** providers · **31** built-in tools · **14** lsp ops · **28** dap ops · **~80k** lines of Rust core.
+| Pieza | Qué es | Dónde vive |
+| --- | --- | --- |
+| **Motor `omp`** | Agente, herramientas, sesiones, subagentes, skills, memoria y conexión con modelos. CLI interactivo (TUI), modo `-p`, RPC, ACP y SDK. | [`packages/coding-agent`](packages/coding-agent) y paquetes de apoyo |
+| **Extensión de VS Code `maria-code`** | Chat, sesiones, selector de modelo, ajustes, voz, checkpoints de ficheros y skills dentro del IDE. Arranca `omp --mode rpc-ui`, así que usa los mismos modelos, skills y sesiones que la terminal. | [`packages/vscode-extension`](packages/vscode-extension) |
 
-> [!NOTE]
-> Pull requests are **temporarily open to everyone** as a trial. We previously
-> required a vouch before accepting PRs; that requirement is lifted for now
-> while we evaluate how open contributions go. Depending on the results, the
-> vouch system may return.
+El motor es un fork de [oh-my-pi](https://github.com/can1357/oh-my-pi) (de Stencil Labs), que a su vez nace de [Pi](https://github.com/badlogic/pi-mono) de Mario Zechner. MarIA Code mantiene la base y añade la integración con el entorno de Unicaja, la extensión de VS Code y los ajustes de seguridad y privacidad descritos más abajo. Las mejoras de upstream se portan de forma selectiva; el análisis vigente está en [`docs/upstream-gap-analysis-v18.18.9.md`](docs/upstream-gap-analysis-v18.18.9.md).
 
-## Install
+## Para quién es
 
-**macOS · Linux**
+- **Desarrolladores**: implementar, depurar, revisar y refactorizar código en cualquier repositorio.
+- **Plataforma y operaciones**: tareas de infraestructura y operación a través de skills (nube, paneles, tickets, wikis, gateways y registros de modelos). Los chats sin workspace de la extensión están pensados para estas tareas generales.
+- **Equipos que integran el agente** en otras herramientas, mediante RPC o SDK.
 
-```sh
-curl -fsSL https://omp.sh/install | sh
-```
+## Qué hace el agente
 
-Without a usable bun (or with `--binary`), the install scripts fetch the prebuilt binary from `build.stencil.so` and check its SHA-256 before installing it. Pin a release with `curl -fsSL https://omp.sh/install | sh -s -- --binary --ref v<version>` (PowerShell: `-Binary -Ref v<version>`).
+- **Edición fiable**: parches anclados por hash de contenido (*hashline*); si el fichero cambió, el parche se rechaza en lugar de corromperlo. Los cambios estructurales (`ast_edit`) se previsualizan antes de aplicarse.
+- **IDE integrado**: `lsp` (diagnósticos, navegación, renombrados) y `debug` (DAP) como herramientas del agente.
+- **Ejecución**: `bash` con motor embebido y `eval` con Python y JavaScript persistentes que pueden llamar de vuelta a las herramientas del agente.
+- **Subagentes**: `task` reparte el trabajo en paralelo, opcionalmente en worktrees aislados, y devuelve resultados validados por esquema. El rol `advisor` revisa cada turno con otro modelo, y `/review` puntúa los hallazgos de P0 a P3.
+- **Skills**: procedimientos reutilizables (`SKILL.md`) que codifican cómo operar un sistema concreto. El agente puede proponer mejoras a una skill tras una tarea; no se aplican hasta que las apruebas en la extensión.
+- **Memoria** entre sesiones, limitada al proyecto por defecto.
+- **Contexto de repositorio**: lee `AGENTS.md`, `CLAUDE.md` y las reglas ya presentes en `.cursor`, `.claude`, `.codex`, `.cline`, `.github/copilot` y similares.
+- **Web y documentos**: `web_search`, lectura de PDF, páginas, issues y PRs (`pr://`, `issue://`) con la misma herramienta `read`.
+- **Revisión y Git**: `/review`, `omp commit` (commits atómicos con mensajes validados) y resolución de conflictos de merge mediante `conflict://`.
 
-> **Alpine / musl:** the prebuilt musl binary links `libstdc++`/`libgcc` dynamically, which stock Alpine does not ship. Install them first: `apk add libstdc++ libgcc`.
+### Herramientas
 
-**Homebrew**
+Las herramientas viven en el mismo espacio de nombres que `read` y `bash`. `--tools read,edit,bash,…` fija el conjunto activo; las poco habituales quedan tras dispositivos `xd://` (`read xd://` los lista).
 
-```sh
-brew install can1357/tap/omp
-```
+| Familia | Herramientas |
+| --- | --- |
+| Ficheros y búsqueda | `read`, `write`, `edit`, `ast_edit`, `ast_grep`, `grep`, `glob` |
+| Ejecución | `bash`, `eval` |
+| Código | `lsp`, `debug`, `security_scan` |
+| Coordinación | `task`, `wait`, `todo`, `ask` |
+| Escritorio y web | `browser`, `computer`, `web_search`, `github`, `generate_image`, `tts` |
+| Memoria y skills | `checkpoint`, `rewind`, `retain`, `recall`, `reflect`, `memory_edit`, `learn`, `manage_skill` |
 
-**Bun (recommended)**
+Desactivadas por defecto y activables por ajuste: `github`, `security_scan`, `generate_image`, `tts`, `checkpoint`, `rewind` y las de memoria.
 
-```sh
-bun install -g @oh-my-pi/pi-coding-agent
-```
+### Controles de turno y de sesión
 
-**Nix**
+- `ultrathink`, `orchestrate` y `workflowz`, escritas como palabras sueltas en minúsculas dentro de un prompt, activan razonamiento profundo, orquestación con subagentes o un flujo multiagente determinista. Ver [`docs/magic-keywords.md`](docs/magic-keywords.md).
+- `/vibe` ([`docs/vibe-mode.md`](docs/vibe-mode.md)) y `/fresh` ([`docs/session-operations-export-share-fork-resume.md`](docs/session-operations-export-share-fork-resume.md#fresh)).
 
-```sh
-# Run without installing
-nix run github:can1357/oh-my-pi
+## Extensión de VS Code
 
-# Or install into the active profile (Nix < 2.30: `nix profile install`)
-nix profile add github:can1357/oh-my-pi
-```
+Chat en la barra lateral o en una pestaña del editor, pensado para el trabajo diario:
 
-Flake consumers can use `packages.<system>.omp`, `overlays.default`, `nixosModules.default`, or `homeManagerModules.default`. A Home Manager configuration can install OMP and own its settings declaratively:
+- Respuestas en streaming con markdown, razonamiento plegable y una fila de actividad por cada llamada a herramienta (lecturas, ediciones con `+/−`, comandos).
+- **Plan mode**: el agente planifica en solo lectura y tú apruebas, refinas o abres el plan en el editor.
+- **Editar un prompt anterior** y, si el agente modificó ficheros, **restaurarlos** a partir de checkpoints en git (objetos en un índice temporal; no tocan ramas, índice ni historial).
+- **Preguntas del agente** como tarjeta sobre el chat, con avisos sonoros mientras esperan respuesta.
+- **Varias sesiones a la vez**, historial con búsqueda, y chats **sin workspace** para tareas generales.
+- **Dictado por voz**, `@` para adjuntar ficheros y carpetas, imágenes pegadas, predicción de palabras y «Mejorar prompt».
+- **Skills de la sesión**: activarlas o desactivarlas por chat, importarlas y revisar las mejoras propuestas.
+- **Red corporativa**: usa el almacén de certificados del sistema operativo y las CA de Netskope, de modo que un proxy que re-firma HTTPS suele funcionar sin configuración adicional.
 
-```nix
-{
-  inputs.omp.url = "github:can1357/oh-my-pi";
+La lista completa de funciones, ajustes (`ompCustom.*`) y requisitos está en [`packages/vscode-extension/README.md`](packages/vscode-extension/README.md).
 
-  # In your Home Manager module:
-  imports = [ inputs.omp.homeManagerModules.default ];
-  programs.omp = {
-    enable = true;
-    settings.startup.quiet = true;
-  };
-}
-```
+## Instalación
 
-**Windows (PowerShell)**
+### Extensión de VS Code
 
-```powershell
-irm https://omp.sh/install.ps1 | iex
-```
-
-**Pinned versions (mise)**
+Descarga `maria-code.vsix` desde las *releases* del repositorio y ejecuta **Extensions: Install from VSIX…**, o:
 
 ```sh
-mise use -g github:can1357/oh-my-pi
+code --install-extension maria-code.vsix
 ```
 
-macOS · Linux · Windows · bun ≥ 1.4.4
+La extensión necesita el motor `omp` en el `PATH` (o configurado en `ompCustom.executable`).
 
-### Shell completions
+### Motor `omp` desde el código fuente
 
-`omp` generates its own completion scripts for **bash**, **zsh**, and **fish** from the live command/flag metadata, so they never drift from the actual CLI. Subcommands, flags, and enum values complete statically; model names (`--model`, `--smol`, `--slow`, `--plan`) resolve against the bundled model catalog and `--resume` against your on-disk sessions.
+Requiere Bun ≥ 1.4.4 y la cadena de herramientas de Rust del repositorio (`rust-toolchain.toml`).
 
 ```sh
-# zsh — add to ~/.zshrc (or write the output into a file on your $fpath)
-eval "$(omp completions zsh)"
-
-# bash — add to ~/.bashrc
-eval "$(omp completions bash)"
-
-# fish
-omp completions fish > ~/.config/fish/completions/omp.fish
+bun setup          # instala los workspaces y compila el addon nativo
+bun dev            # ejecuta el CLI desde las fuentes
+bun dev -- --version
 ```
 
-## Every tool, _benchmaxxed_.
+`bun setup` compila `@oh-my-pi/pi-natives`; repite `bun run build:native` tras cambiar los crates de Rust o `packages/natives`. Los usuarios de Nix disponen de un entorno reproducible con `nix develop`. Para generar el binario y enlazar `omp` en el `PATH`, ver [`packages/coding-agent/DEVELOPMENT.md`](packages/coding-agent/DEVELOPMENT.md) y `scripts/link-omp.sh`.
 
-Edits that land on the first attempt. Reads that summarize files instead of dumping their content. Searches that return instantly. Pick any model — omp will get it right.
+> [!WARNING]
+> Los instaladores públicos de upstream (`https://omp.sh/install`, `install.ps1`, la fórmula de Homebrew `can1357/tap/omp`, `mise use github:can1357/oh-my-pi`) y `omp update` resuelven contra el proyecto original, no contra esta distribución. Instala MarIA Code desde las *releases* de este repositorio o desde sus fuentes.
 
-| model            | metric       | what                                                                  |
-| ---------------- | ------------ | --------------------------------------------------------------------- |
-| Grok Code Fast 1 | 6.7% → 68.3% | Tenfold lift the moment the edit format stops eating the model alive. |
-| Gemini 3 Flash   | +5 pp        | Over str_replace — beats Google's own best attempt at the format.     |
-| Grok 4 Fast      | −61% tokens  | Output collapses once the retry loop on bad diffs disappears.         |
-| MiniMax          | 2.1×         | Pass rate more than doubles. Same weights, same prompt.               |
+Versionado: el motor conserva la versión base `18.9.1` con etiquetas `v18.9.1-custom.N`; la extensión de VS Code se versiona aparte (`packages/vscode-extension/package.json`).
 
-- `read` : summarized snippets · ideal defaults · selector hit rate
-- `grep` : fastest in the west
-- `lsp` : everything your IDE knows, the agent knows
-- `prompts` : adjusted relentlessly for each model
+## Modelos y gateway corporativo
 
-[Read the full post ↗](https://blog.can.ac/2026/02/12/the-harness-problem/)
+MarIA Code se conecta a los modelos a través del **gateway LiteLLM de Unicaja** (`driver-ia.<env>.unicajasc.corp`). El motor descubre los modelos que el gateway expone y los reparte entre roles: `default`, `smol` (subagentes baratos), `slow` (razonamiento profundo), `plan`, `commit`, `vision`, `task`, `advisor`, `tiny`, además de los roles `ask` y `enhance` que usa la extensión. `Ctrl+P` recorre los modelos del rol activo, `/model` cambia el modelo en mitad de una sesión y `--smol`, `--slow` y `--plan` lo fijan al arrancar.
 
-## The Pi _you love_, with **batteries included**.
+```sh
+export LITELLM_BASE_URL="<URL del gateway de tu entorno>/v1"
+export LITELLM_API_KEY="<tu clave>"
+omp models            # lista lo descubierto
+```
 
-Originally built on [Mario Zechner](https://github.com/mariozechner)'s wonderful [Pi](https://github.com/badlogic/pi-mono), omp adds everything you're missing.
-
-### 01 · Code execution w/ tool-calling
-
-Most harnesses give the agent a Python sandbox and call it done. Ours runs persistent Python and a Bun worker, and either kernel can call back into the agent's own tools — read, search, task — over a loopback bridge. The agent loads a CSV with tool.read from inside Python, charts it from JavaScript, and never leaves the cell.
-
-![omp TUI running Python code and rendering a chart.](assets/python.webp)
-
-### 02 · LSP wired into every write
-
-Ask for a rename and you get a rename. The call goes through workspace/willRenameFiles, so re-exports, barrel files, and aliased imports update before the file moves. Everything your IDE knows, the agent knows.
-
-![omp TUI with TypeScript and Biome language servers active.](assets/lspv.webp)
-
-_[Read the LSP config docs](docs/lsp-config.md)_
-
-### 03 · Drives a real debugger
-
-A C binary segfaults: the agent attaches lldb, steps to the bad pointer, reads the frame. A Go service hangs: it attaches dlv and walks the goroutines. A Python process is wedged: debugpy, pause, inspect, evaluate. Most agents are still sprinkling print statements.
-
-![omp TUI: a live lldb-dap session against a native binary at /tmp/omp-native/demo. Adapter=lldb-dap, Status=stopped, Frame=xorshift32, Instruction pointer 0x10000055C, Location demo.c:6:10. Debug scopes and Debug variables cards show locals (x = 57351) and the agent confirms the math: x went from 7 → 57351 (= 7 ^ (7<<13)).](https://omp.sh/clips/dap-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/dap.mp4)_
-
-### 04 · Time-traveling stream rules
-
-Your rules sit dormant until the model goes off-script. A regex match aborts the stream mid-token, injects the rule as a system reminder, and retries from the same point. You get course-correction without paying context tax on every turn. Injections survive compaction, so the fix sticks.
-
-![omp TUI: agent reading src.rs and about to write Box::leak when the request aborts (red `Error: Request was aborted`), an amber `⚠ Injecting rule: box-leak` card injects the rule body `Don't reach for Box::leak in production code paths`, and the agent then course-corrects by proposing `Arc<str>` and asking the user to confirm.](https://omp.sh/clips/ttsr-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/ttsr.mp4)_
-
-### 05 · First-class subagents
-
-Split a job across workers and get typed results back. task fans out into isolated worktrees, each worker runs its own tool surface, and the final yield is a schema-validated object the parent reads directly. No prose to parse, no merge conflicts between siblings, no orphaned edits.
-
-![omp TUI showing `task` spawning two subagents `ComponentsExports` and `RoutesExports`, the constraints block requiring an IRC DM between peers, the per-subagent status cards with cost and duration, and a final Findings section listing both exports plus an honest 'IRC coordination note' about a one-sided handshake.](https://omp.sh/clips/irc-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/irc.mp4)_
-
-Watch the fan-out while it runs: `Alt+A` opens [Agent Hub](docs/agent-hub.md), where the roster shows current activity and usage for every subagent. Open one to read its live transcript, type a steering message, revive a parked worker, or kill a stuck one without aborting the parent session.
-
-### 06 · A second model, watching every turn.
-
-Pair a reviewer model to the 'advisor' role and it reads every turn the main agent takes, injecting notes inline — a quiet aside, a concern, or a hard blocker. It runs on its own context and its own model, so it catches what the doer rushed past. The main agent sees the note and course-corrects, or tells you why it won't.
-
-![omp TUI: /advisor status shows the advisor running on openai-codex/gpt-5.5; after the main agent scopes a catch to ENOENT instead of swallowing every error, an amber 'Advisor 1 note (concern)' card warns the fix no longer matches the user's literal acceptance criterion.](https://omp.sh/clips/advisor-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/advisor.mp4)_
-
-### 07 · Hand someone the link, they're in.
-
-/collab puts your live session on a relay and hands back a link — and a QR. A teammate joins from another terminal with omp join, or just opens it in a browser. Share read-write to pair on the same agent, or /collab view for a read-only link anyone can watch but no one can steer. Frames are sealed client-side; the relay never sees your keys.
-
-![omp TUI: /collab view prints 'Collab session started!' with an omp join command, a my.omp.sh browser link, the note 'Anyone with this link can watch the session but cannot prompt the agent', and a large scannable QR code.](https://omp.sh/clips/collab-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/collab.mp4)_
-
-### 08 · Read a pdf on arxiv, why not?
-
-web_search chains twenty-three ranked providers and hands whatever URLs it finds straight to read. Arxiv PDFs, GitHub pages, Stack Overflow threads come back as structured markdown with anchors intact — the same tool surface you use on local files. Cite, follow, quote, never lose where you came from.
-
-![omp TUI: web_search returns 10 ranked Perplexity sources for inference-time compute scaling, the agent picks an arxiv paper, calls read https://arxiv.org/pdf/2604.10739v1, and summarizes the paper's headline result with real numbers.](https://omp.sh/clips/web-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/web.mp4)_
-
-### 09 · Unapologetically native. Even on Windows.
-
-Other agents shell out to rg, grep, find, and bash. On many machines those binaries don't exist, and on the ones where they do, every call costs a fork-exec round-trip. omp links the real implementations into the process. ripgrep, glob, find: in-process. brush is the bash — with sessions that survive across calls, and 58 command-line utilities (ls, sed, sort, xargs, even jq) ported into the builtins crate and run in-process, zero fork/exec. The same omp binary runs on macOS, Linux, and Windows — no WSL bridge.
-
-### 10 · Code review with priorities and a verdict
-
-Get a clear verdict on whether the change ships, with every issue ranked P0 through P3 and scored for confidence. /review spawns dedicated reviewer subagents that sweep branches, single commits, or uncommitted work in parallel. You tackle what blocks release first; nothing important hides in a wall of prose.
-
-Want to steer the review yourself? `/annotate code-review` opens the diff so you can pin notes to lines before the reviewers run. `/annotate` also takes the latest reply, a session message, a file, or quoted text and pastes your notes into the prompt. See [`/annotate`](docs/slash-command-internals.md#12-bundled-command-note-annotate).
-
-### 11 · Hashline: edit by content hash
-
-Perfect edits, fewer tokens. The model points at anchors instead of retyping the lines it wants to change, so whitespace battles and string-not-found loops just stop happening. Edit a stale file and the anchors diverge — we reject the patch before it corrupts anything. Grok 4 Fast spends 61% fewer output tokens on the same work.
-
-### 12 · GitHub is just another filesystem
-
-Other harnesses bolt on gh_issue_view, gh_pr_view, gh_search — each with its own parameters the agent has to learn and you have to debug. We skipped that. read already handles paths; PRs are paths. One interface to teach the model, one surface to keep correct.
-
-### 13 · Memory the agent curates
-
-The agent remembers your codebase between sessions. It writes facts mid-run with retain, captures reusable lessons with learn, pulls them back with recall, and compresses each session into a mental model that loads on the first turn of the next one. Pick the engine with `memory.backend` — local, Hindsight, or Mnemopi. Project-scoped by default, so what it learns about this repo stays with this repo.
-
-### 14 · ACP: editor-drivable agent
-
-Run omp inside Zed and you get the same agent you drive from the terminal — reading the buffer you're actually looking at, writing through the editor's save path, spawning shells in the editor's terminal. Destructive tools pause for a permission prompt you can answer once and forget. No bridge, no plugin, no second brain to keep in sync.
-
-### 15 · Inherits what your other tools already wrote
-
-Every other agent ships an importer and expects you to convert. omp reads the eight formats already on disk in their native shape — Cursor MDC, Cline .clinerules, Codex AGENTS.md, Copilot applyTo, and the rest. No migration script, no YAML-to-TOML port, no "supported subset" footnotes. The config your team wrote last quarter still works tonight.
-
-### 16 · omp commit: atomic splits, validated messages
-
-omp reads the working tree through git_overview, git_file_diff, and git_hunk, then splits unrelated changes into atomic commits ordered by their dependencies. Cycles are rejected before anything is written. Source files score above tests, docs, and configs, so the headline commit is the one that matters. Lock files are excluded from analysis entirely.
-
-### 17 · Read PRs. _Walk skills._ Pull JSON out of subagents.
-
-Sixteen internal schemes — `pr://`, `issue://`, `agent://`, `skill://`, `ssh://`, and the rest — resolve transparently inside every FS-shaped tool the agent already calls. `read pr://1428` returns the same shape as `read src/foo.ts`. `grep` walks a diff like a directory. `agent://<id>/findings.0.path` pulls a field out of a subagent's output by path.
-
-### 18 · Conflict resolution, made easy.
-
-Each merge conflict becomes one URL. The agent writes `@theirs`, `@ours`, or `@base` to `conflict://N` and the file resolves cleanly. Bulk form: `conflict://*`.
-
-![omp TUI: ✓ Read src/session.ts (⚠ 1 conflict), then ✓ Write conflict://1 · 1 line with content @theirs, then a confirmation 'Resolved.'](https://omp.sh/clips/conflict-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/conflict.mp4)_
-
-### 19 · Preview, then accept.
-
-`ast_edit` returns a _(proposed)_ card with the replacement count. The change is staged. The agent writes a one-line reason to `xd://resolve`; the TUI turns it into an **Accept** card and the disk move happens — atomic, all or nothing.
-
-![omp TUI: ✓ AST Edit: console.log($X) (proposed) 3 replacements · 1 file, then ✓ Accept: 3 replacements in 1 file (AST Edit), followed by 'Applied 3 replacements in src/auth.ts.'](https://omp.sh/clips/codemod-poster.webp)
-
-_[Watch the capture ↗](https://omp.sh/clips/codemod.mp4)_
-
-### 20 · Drives a _real browser_. _Or your Slack?_
-
-Eval's `browser.open(...)` returns a tab handle with direct navigation, inspection, interaction, and element helpers; `tab.run(...)` handles custom JavaScript. It drives Chromium or Electron in an isolated tab runtime. Stealth is on by default, while the browser relay can adopt Chrome tabs you already have open without stealing focus.
-
-### 21 · Hands on the desktop itself
-
-Eval's `computer` helpers — `computer.window(...)`, `win.screenshot()`, `win.ax()`, `el.press()`, plus `computer.run(fnOrCode, options)` for multi-step scripts — control the real host: enumerate windows and displays, capture screenshots, send native input, walk the OS accessibility tree, and use the clipboard. It exposes no browser DOM.
-
-## Whatever the task needs, _it's already in the box_.
-
-Core tools live in the same namespace as `read` and `bash`. Pin the active set with `--tools read,edit,bash,…`; rarely used discoverable tools stay behind `xd://` devices. `read xd://` lists them, and `write xd://<tool>` runs one when `tools.xdev` is enabled.
-
-**Files & search**
-
-- `read` — files, dirs, archives, SQLite, PDFs, notebooks, URLs, remote `ssh://` paths, and internal `://` schemes through one path.
-- `write` — create or overwrite a file, archive entry, or SQLite row.
-- `edit` — hashline patches with content-hash anchors and stale-anchor recovery.
-- `ast_edit` — structural rewrites previewed before apply, via ast-grep.
-- `ast_grep` — structural code queries over 50+ tree-sitter grammars.
-- `grep` — regex over files, globs, and internal URLs.
-- `glob` — glob-based path lookup; reach for `grep` when you need content matches.
-
-**Runtime**
-
-- `bash` — workspace shell with 46 in-process coreutils, optional PTY, and background-job dispatch.
-- `eval` — persistent Python and JavaScript cells with shared prelude and tool re-entry.
-
-**Code intelligence**
-
-- `lsp` — diagnostics, navigation, symbols, renames, code actions, raw requests.
-- `debug` — drive a DAP session — breakpoints, stepping, threads, stack, variables.
-- `security_scan` — plan and run native security reviews; drives Codex Security cloud scans.
-
-**Coordination**
-
-- `task` — fan out subagents in parallel, optionally workspace-isolated.
-- `wait` — block until the next background result, peer message, or steering interrupt; message peers and control jobs via `agent://` and `proc://`.
-- `todo` — ordered mutations over the session todo list with phase tracking.
-- `ask` — structured follow-up questions for interactive runs.
-
-**Desktop & web**
-
-- `browser` — Puppeteer tabs over headless Chromium, CDP-attached apps, or your own Chrome via the relay.
-- `computer` — persistent JS against the host desktop: windows, screenshots, native input, AX tree, clipboard.
-- `web_search` — one query across configured providers, returning answer plus citations.
-- `github` — GitHub CLI ops — repo, PR, issues, code search, Actions run-watch.
-- `generate_image` — generate or edit raster images via Gemini, GPT, or xAI Grok image models.
-- `tts` — text-to-speech via xAI Grok Voice — five built-in voices, WAV or MP3.
-
-**Memory & skills**
-
-- `checkpoint` — mark conversation state for a later collapse-and-report.
-- `rewind` — prune exploratory context, keep a concise report.
-- `retain` — queue durable facts into the active memory bank.
-- `recall` — search the memory bank for raw memories.
-- `reflect` — synthesize an answer over the bank.
-- `memory_edit` — update, forget, or invalidate stored memories by id.
-- `learn` — capture a reusable lesson; optionally promote it into a managed skill.
-- `manage_skill` — create, update, or delete an isolated managed skill.
-
-Setting-gated, off by default: `github`, `security_scan`, `generate_image`, `tts`, `checkpoint`, `rewind`, and the memory tools (`retain`/`recall`/`reflect`/`memory_edit`, per `memory.backend`).
-
-[Full reference →](https://omp.sh/docs/tools)
-
-### Prompt controls
-
-Three standalone, lowercase words opt a turn into specialized agent behavior:
-
-- `ultrathink` — request careful multi-step reasoning and the highest supported automatic thinking effort.
-- `orchestrate` — run substantial independent work through parallel subagents and verify each phase.
-- `workflowz` — build a deterministic multi-subagent workflow with the active `task` tool.
-
-They trigger only in prose, not inside code spans, fenced code blocks, XML/HTML sections, identifiers, or paths. See [Magic keywords](docs/magic-keywords.md) for exact matching rules and configuration.
-
-### Session controls
-
-Slash commands shift how a whole session runs:
-
-- `/vibe` — enter [Vibe mode](docs/vibe-mode.md): act as a director driving persistent `fast`/`good` worker sessions with a `read`-only toolset.
-- `/fresh` — reset the provider stream state (stale prompt cache, wedged stream) without changing the local transcript. See [Session operations](docs/session-operations-export-share-fork-resume.md#fresh).
-
-## Sixty-plus providers, a thousand models, _one /model away_.
-
-Nine roles route work by intent. `default` for normal turns. `smol` for cheap subagent fan-out. `slow` for deep reasoning. `plan` for plan mode. `commit` for changelogs. Plus `vision`, `task`, `advisor`, and `tiny` for their namesakes. Override at launch with `--smol`, `--slow`, or `--plan`; cycle through the configured models for the active role with `Ctrl+P`. Swap the active model mid-session with the `/model` slash command.
-
-Auth tags below: `oauth` signs in with your provider account, `plan` routes through a coding-plan subscription, `local` runs against a local server with the key optional.
-
-### Frontier APIs
-
-Direct APIs and gateways. Mix providers per role.
-
-Anthropic `oauth` · OpenAI · OpenAI Codex `oauth` · Google Gemini · Google Vertex · Google Antigravity `oauth` · xAI · SuperGrok `oauth` · DeepSeek · Mistral · Groq · Cerebras · Fireworks · Together · Baseten · DeepInfra · Hugging Face · NVIDIA · Meta · Amazon Bedrock · Azure OpenAI · SiliconFlow · GMI Cloud · CoreWeave · Sakana AI · Command Code · Charm Hyper · StepFun · Helmcode · OpenRouter · Synthetic · Vercel AI Gateway · Cloudflare AI Gateway · Wafer Serverless
-
-### Coding plans
-
-Subscription-routed. `/login` attaches the session.
-
-Cursor `oauth` · GitHub Copilot `oauth` · GitLab Duo · Devin `oauth` · Kimi Code `plan` · Moonshot · MiniMax Coding Plan `plan` · MiniMax Coding Plan CN `plan` · Alibaba Coding Plan `plan` · Qwen Portal `oauth` · Z.AI / GLM Coding Plan `plan` · Zhipu Coding Plan `plan` · Xiaomi MiMo · Qianfan · Umans `plan` · NanoGPT · Novita · Venice · Kilo · ZenMux · OpenCode Go · OpenCode Zen
-
-### Run it yourself
-
-OpenAI-compatible `/v1/models`. Local instances skip the key.
-
-Ollama `local` · Ollama Cloud · LM Studio `local` · llama.cpp `local` · vLLM `local` · LiteLLM
-
-### Custom OpenAI-compatible providers
-
-Define custom providers in `~/.omp/agent/models.yml`:
+Para fijar el modelo por defecto o declarar más proveedores compatibles con OpenAI, usa `~/.omp/agent/models.yml` y `~/.omp/agent/config.yml`:
 
 ```yaml
-providers:
-  spark:
-    baseUrl: http://192.168.10.223:8000/v1
-    api: openai-completions
-    apiKey: dummy
-    models:
-      - id: minimax-m3
-        name: MiniMax M3
-        contextWindow: 100000
-        maxTokens: 32000
-```
-
-Run `omp models spark` to verify discovery. Then run `omp setup` and choose the model in the default-model step, or open `/model` in a session and assign it to the `default` role.
-
-To preconfigure the default without the picker, add the selector to `~/.omp/agent/config.yml`:
-
-```yaml
+# ~/.omp/agent/config.yml
 modelRoles:
-  default: spark/minimax-m3
+  default: litellm/<modelo>
 ```
 
-### Four knobs that make routing useful
+Referencias: [`docs/models.md`](docs/models.md) (formato de `models.yml`, descubrimiento LiteLLM, cadenas de *fallback* en `retry.fallbackChains`, modelos por ruta), [`docs/providers.md`](docs/providers.md) y [`docs/auth-broker-gateway.md`](docs/auth-broker-gateway.md) (bóveda de credenciales y *forward proxy* que mantienen los tokens fuera de los equipos de los desarrolladores).
 
-- **Custom providers** — Declare anything that speaks `openai-completions`, `openai-responses`, `openai-codex-responses`, `azure-openai-responses`, `anthropic-messages`, `bedrock-converse-stream`, `google-generative-ai`, `google-gemini-cli`, `google-vertex`, `typesafe`, or `openrouter-decisions` (the two judge APIs) in `~/.omp/agent/models.yml`.
-- **Fallback chains** — Per-role or per-model chains under `retry.fallbackChains`. When the primary throws 429s or hits a quota wall, the next entry takes the rest of the turn — restored on cooldown.
-- **Path-scoped models** — Scope `enabledModels` and `disabledProviders` entries to a `path:` prefix to pin a different model set on one repo without touching the global config. Scoped entries cover the path and everything under it.
-- **Round-robin credentials** — Stack API keys per provider and the runtime rotates with session affinity and per-credential backoff. Useful when one key would burn its quota by lunch.
+## Seguridad, privacidad y cumplimiento
 
-Full provider & routing reference at [omp.sh/docs/providers](https://omp.sh/docs/providers).
+Valores por defecto de esta distribución, comprobados en el código. Revísalos antes de desplegar en un equipo o en un contenedor compartido.
 
-## Twenty-three backends. _One tool the agent already knows_.
+| Aspecto | Valor por defecto | Cómo cambiarlo |
+| --- | --- | --- |
+| Aprobación de herramientas (`tools.approvalMode`) | `yolo`: el agente ejecuta lectura, escritura y comandos sin preguntar | `always-ask` (pregunta al escribir y ejecutar) o `write` (pregunta solo al ejecutar), también con `--approval-mode`. Reglas por herramienta en `tools.approval`. Los subagentes corren sin interfaz y no pueden responder a un aviso. Ver [`docs/approval-mode.md`](docs/approval-mode.md) |
+| Ofuscación de secretos (`secrets.enabled`) | Desactivada | Activarla sustituye claves, tokens y contraseñas por marcadores antes de enviar texto al proveedor. Ver [`docs/secrets.md`](docs/secrets.md) |
+| Auto QA y reporte de incidencias (`dev.autoqa`) | Desactivado; sin *endpoint* de envío (`dev.autoqaPush.endpoint` vacío) | Requiere activación explícita, consentimiento del usuario y un *endpoint* configurado |
+| Consultas fuera de sesión (`ask` sobre una selección, «Mejorar prompt», mejora de skills) | No se registran en la sesión y, en el gateway de Unicaja, llevan `"no-log": true` para quedar fuera de los logs del proxy | Ver [`docs/rpc.md`](docs/rpc.md) |
+| Contenido del proyecto | Al abrir un repositorio se cargan por diseño sus ajustes, extensiones, hooks, herramientas, comandos, skills, reglas y configuración MCP; no hay filtro de confianza de proyecto | Ver «Entradas del proyecto» más abajo |
 
-`web_search` is built in, not bolted on. `auto` walks a twenty-three-provider chain; pin one by name if you already pay for it. Behind every hit, site-aware extraction turns GitHub, registries, arXiv, Stack Overflow, and docs into structured markdown — anchors and link targets survive.
+### Servicios externos heredados de upstream
 
-### Search providers
+El motor trae valores por defecto que apuntan a servicios de Stencil Labs, que **no pertenecen a Unicaja**. Reapúntalos o desactívalos según la política de seguridad antes de usarlos con código o datos de la entidad.
 
-Twenty-three backends. Pin one, or let `auto` walk the chain in order.
+| Función | Servicio por defecto | Ajuste |
+| --- | --- | --- |
+| `/collab` (sesiones compartidas) | `wss://my.omp.sh` | `collab.relayUrl` |
+| `/share` (subida de sesiones; ofusca secretos por defecto) | `https://my.omp.sh/s` | `share.serverUrl`, `share.store`, `share.redactSecrets` |
+| Registro de skills (`omp skill …`) | `https://skills.omp.sh` | `skills.registryUrl` |
+| `omp stream` | `https://live.omp.sh` | `stream.serverUrl` |
+| Comprobación de actualizaciones al arrancar y servicio de *builds* | `https://build.stencil.so` y el canal de releases de upstream | `startup.checkUpdate`, `PI_BUILD_URL` |
+| `web_search` | Cadena de proveedores de búsqueda externos, algunos sin clave | Fijar un proveedor por nombre en los ajustes de búsqueda |
 
-| provider     | auth                                      |
-| ------------ | ----------------------------------------- |
-| `auto`       | chain                                     |
-| `perplexity` | `PERPLEXITY_API_KEY` (anonymous fallback) |
-| `gemini`     | oauth                                     |
-| `anthropic`  | oauth                                     |
-| `codex`      | oauth                                     |
-| `xai`        | oauth or `XAI_API_KEY`                    |
-| `zai`        | `ZAI_API_KEY`                             |
-| `exa`        | `EXA_API_KEY` (or mcp)                    |
-| `tinyfish`   | `TINYFISH_API_KEY`                        |
-| `jina`       | `JINA_API_KEY`                            |
-| `kagi`       | `KAGI_API_KEY`                            |
-| `tavily`     | `TAVILY_API_KEY`                          |
-| `firecrawl`  | `FIRECRAWL_API_KEY` (keyless fallback)    |
-| `brave`      | `BRAVE_API_KEY`                           |
-| `kimi`       | `/login kimi-code` or search key          |
-| `parallel`   | `PARALLEL_API_KEY`                        |
-| `synthetic`  | `SYNTHETIC_API_KEY`                       |
-| `searxng`    | self-hosted                               |
-| `duckduckgo` | no key                                    |
-| `startpage`  | no key                                    |
-| `google`     | no key (browser)                          |
-| `ecosia`     | no key (browser)                          |
-| `mojeek`     | no key (browser)                          |
-| `public`     | no key (all of the above, consolidated)   |
+### Entradas del proyecto
 
-Exa also accepts a stored API key through `/login exa`; explicit keyless selection uses the public MCP fallback.
+Abrir un repositorio carga sus entradas por diseño. Para excluir el `.mcp.json` del proyecto en una invocación, pasa `--config <fichero>` con una capa YAML anidada (una línea plana `mcp.enableProjectConfig: false` se ignora):
 
-### Specialised handlers
+```yaml
+mcp:
+  enableProjectConfig: false
+```
 
-The agent gets structured content, not stripped HTML.
+`--no-extensions` omite el descubrimiento de extensiones; `--trusted-extension /ruta/absoluta/al/fichero.ts` admite solo las extensiones indicadas. `--no-tools` desactiva las herramientas integradas, pero los módulos de herramientas del proyecto son una superficie de descubrimiento aparte.
 
-- **Code hosts** — github, gitlab
-- **Package registries** — npm, PyPI, crates.io, Hex, Hackage, NuGet, Maven, RubyGems, Packagist, pub.dev, Go packages
-- **Research sources** — arxiv, semantic scholar
-- **Forums** — stack overflow, reddit, hn
-- **Docs** — mdn, readthedocs, docs.rs
+> **Vulnerabilidades.** No las publiques en issues abiertos. Comunícalas por los canales internos de seguridad de Unicaja. `.github/SECURITY.md` es el texto heredado de upstream.
 
-Pages convert to markdown with link structure intact. The agent can cite, follow, and quote without losing anchors.
+## Puntos de entrada
 
-### Security databases
+Un solo motor, cuatro envoltorios.
 
-Vuln lookups answer with vendor data, not blog summaries.
+| Modo | Comando | Uso |
+| --- | --- | --- |
+| Interactivo | `omp` | TUI; la ambigüedad se resuelve con la herramienta `ask` (selector estructurado) |
+| Un solo prompt | `omp -p "<prompt>"` | Responde y sale |
+| RPC | `omp --mode rpc` / `--mode rpc-ui` | NDJSON por stdio; `rpc-ui` añade tarjetas, selectores y diálogos. Es el modo que usa la extensión. [`docs/rpc.md`](docs/rpc.md). SDK cliente en `sdk/go`, `sdk/python` y `sdk/rust` (`omp-rpc`) |
+| ACP | `omp acp` | [Agent Client Protocol](https://github.com/zed-industries/agent-client-protocol) para editores; las escrituras pasan por `session/request_permission` |
 
-- **NVD** — national vulnerability database
-- **OSV** — open source vuln feed
-- **CISA KEV** — known exploited vulns
-
-[`web_search` reference ↗](https://omp.sh/docs/tools#web_search)
-
-## Roughly **~80,000** lines of Rust, doing the work other harnesses shell out for.
-
-Six crates, one platform-tagged N-API addon. Search, shell, AST, highlight, PTY, desktop control, image decode, BPE counting — all in-process on the libuv pool. No fork/exec on the hot path. Another ~80k lines ride along vendored: the brush bash fork, plus 58 command-line utilities — coreutils, findutils, sed, jq, ripgrep-backed grep, fd, diff, moreutils — ported into the builtins crate and compiled straight into the shell.
-
-- Crates: `pi-natives`, `pi-shell`, `pi-ast`, `pi-iso`, `pi-voice`, `pi-walker`
-- Platforms: `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64`, `win32-arm64` — x64 ships dual AVX2 and baseline binaries
-
-Per crate, code lines only:
-
-| Crate         | What it does                                                                           |   ~LoC |
-| ------------- | -------------------------------------------------------------------------------------- | -----: |
-| pi-shell      | Embedded bash engine · persistent sessions · in-process coreutils dispatch · minimizer | 38,000 |
-| pi-natives    | The N-API surface — every module in the table below                                    | 25,000 |
-| pi-walker     | Parallel ignore-aware walker + scan cache shared by grep · glob · workspace · shell    |  5,200 |
-| pi-iso        | Workspace isolation · apfs · btrfs · zfs · reflink · overlayfs · projfs · rcopy        |  3,300 |
-| pi-ast        | tree-sitter + ast-grep matching, block resolution, structural summaries                |  2,900 |
-| pi-voice      | Audio capture/playback · Opus · live WebRTC                                            |  1,000 |
-
-Inside `pi-natives`, the per-module breakdown (glue and tests omitted):
-
-| Module        | What it does                                                                      | Powered by                                |   ~LoC |
-| ------------- | --------------------------------------------------------------------------------- | ----------------------------------------- | -----: |
-| desktop       | Window/display enumeration · screenshot · native input · AX tree for `computer`   | xcap · enigo · OS AX FFI                  | 10,600 |
-| grep          | Regex search · parallel/sequential · glob & type filters · fuzzy find             | grep-regex · grep-searcher                |  3,280 |
-| text          | ANSI-aware width · truncation · column slicing · SGR-preserving wrap              | unicode-width · segmentation              |  2,070 |
-| snapcompact   | Bitmap-frame rasterization + PNG encode for context compression                   | image · png                               |  1,760 |
-| keys          | Kitty keyboard protocol with xterm fallback · PHF perfect-hash lookup             | phf                                       |  1,740 |
-| ast           | ast-grep pattern matching and structural rewrites                                 | ast-grep-core                             |  1,510 |
-| diff          | Structured file diffing for tools and previews                                    | in-tree                                   |  1,030 |
-| pty           | Native PTY allocation for sudo · ssh interactive prompts                          | portable-pty                              |    630 |
-| crash_handler | Native crash capture and reporting                                                | in-tree                                   |    610 |
-| highlight     | Syntax highlighting · 11 semantic categories · 30+ aliases                        | syntect                                   |    550 |
-| appearance    | Mode 2031 + native macOS dark/light via CoreFoundation FFI                        | core-foundation                           |    450 |
-| task          | Blocking work on libuv thread pool · cancellation · timeout · profiling           | tokio · napi                              |    440 |
-| glob          | Discovery with glob · type filters · mtime sort · gitignore respect               | ignore · globset                          |    430 |
-| fd            | Filesystem walker for find-tool replacement                                       | ignore                                    |    385 |
-| clipboard     | Text copy and image read from system clipboard · no xclip/pbcopy                  | arboard                                   |    370 |
-| workspace     | Workspace walker with gitignore + AGENTS.md discovery in one pass                 | ignore                                    |    275 |
-| power         | macOS power-assertion API for idle/system/display-sleep prevention                | IOKit FFI                                 |    270 |
-| prof          | Circular buffer profiler with folded-stack and SVG flamegraph output              | inferno                                   |    240 |
-| file_lock     | Cross-process advisory file locking                                               | in-tree                                   |    210 |
-| ps            | Cross-platform process-tree kill and descendant listing                           | libc · libproc · CreateToolhelp32Snapshot |    195 |
-| tokens        | O200k / Cl100k BPE token counting · both tables embedded                          | tiktoken-rs                               |     70 |
-| html          | HTML to Markdown with optional content cleaning                                   | html-to-markdown-rs                       |     60 |
-| sixel         | Terminal image rendering · decode PNG · JPEG · WebP · GIF · resize · SIXEL encode | icy_sixel · image                         |     55 |
-
-## Four entry points: _interactive_, _one-shot_, RPC, and ACP.
-
-Same engine, four wrappers. `omp` runs the TUI. `omp -p` answers a single prompt and exits. The Node SDK embeds the session in your process. `omp --mode rpc` and `omp acp` hand the wheel to another program over stdio.
-
-### Interactive — when in doubt, the agent asks
-
-The TUI is the default surface. Tool calls render as cards, edits preview before they land, and ambiguity routes through the `ask` tool — a structured option picker the agent can call mid-turn. The keyboard handles the rest.
-
-The same prompt cards surface over ACP, so editors get the picker without writing one.
-
-![omp TUI showing a multi-select question from the ask tool.](assets/ask.webp)
-
-### SDK — embed in Node
-
-`@oh-my-pi/pi-coding-agent`
-
-Node and TypeScript hosts pull the engine in directly. The package exposes `ModelRegistry`, `SessionManager`, `createAgentSession`, and `discoverAuthStorage`; the session emits typed events you subscribe to.
+SDK para Node/TypeScript (`@oh-my-pi/pi-coding-agent`):
 
 ```ts
 import {
@@ -530,185 +200,94 @@ const { session } = await createAgentSession({
   authStorage: auth,
   modelRegistry: models,
 });
-await session.prompt("list .ts files");
+await session.prompt("lista los ficheros .ts");
 ```
 
-### RPC — drive over stdio
+Referencia: [`docs/sdk.md`](docs/sdk.md).
 
-`omp --mode rpc`
+## Extensibilidad
 
-For non-Node embedders, or when you want process isolation. NDJSON commands in, response and event frames out; each prompt ends with its own `prompt_result`. `--mode rpc-ui` adds tool cards, selectors, and dialogs as `extension_ui_request` frames the host must answer; `--no-ui` keeps even extension dialogs off the wire for hosts with no UI.
+- **Extensiones**: módulos TypeScript con la misma API de herramientas, comandos y atajos que los integrados ([`docs/extensions.md`](docs/extensions.md)).
+- **Skills** ([`docs/skills.md`](docs/skills.md)), **MCP** ([`docs/mcp-config.md`](docs/mcp-config.md)), **hooks** ([`docs/hooks.md`](docs/hooks.md)) y **reglas** ([`docs/context-files.md`](docs/context-files.md)).
+- **Plugins y marketplaces** ([`docs/marketplace.md`](docs/marketplace.md)).
+- **Reglas de modelo y proveedor** en KDL (`packages/catalog/src/compat/rules/`), compiladas a `rules.json` con `bun run gen:compat`. Ningún comportamiento específico de un modelo se codifica en TypeScript.
 
-```
-$ omp --mode rpc --no-session
-> {"id":"r1","type":"prompt","message":"list .ts files"}
-< {"id":"r1","type":"response", ...}
-> {"id":"r2","type":"set_model","provider":"anthropic","modelId":"sonnet-4.5"}
-> {"id":"r3","type":"abort"}
-```
+## Estructura del repositorio
 
-### ACP — speak to editors
+### Paquetes
 
-`omp acp`
+| Paquete | Descripción |
+| --- | --- |
+| [`vscode-extension`](packages/vscode-extension) | **Propio de MarIA Code.** Extensión de VS Code |
+| [`coding-agent`](packages/coding-agent) | CLI interactivo, modos RPC/ACP y SDK |
+| [`agent`](packages/agent) | Runtime del agente: bucle, llamadas a herramientas y estado |
+| [`ai`](packages/ai) | Cliente multiproveedor con streaming, bróker de credenciales y gateway |
+| [`catalog`](packages/catalog) | Catálogo de modelos, descriptores de proveedor y reglas KDL |
+| [`tui`](packages/tui) | Biblioteca de interfaz de terminal con renderizado diferencial |
+| [`natives`](packages/natives) | Bindings N-API: grep, shell, imagen, texto, resaltado |
+| [`utils`](packages/utils) | Logger, streams y utilidades de directorios, entorno y procesos |
+| [`wire`](packages/wire) | Tipos del protocolo de sesiones compartidas |
+| [`mnemopi`](packages/mnemopi) | Motor de memoria local sobre SQLite |
+| [`snapcompact`](packages/snapcompact) | Compresión de contexto mediante marcos de imagen |
+| [`stats`](packages/stats) | Panel local de estadísticas de uso (`omp stats`) |
+| [`omptype`](packages/omptype) | Validación de esquemas compatible con ArkType |
+| [`collab-web`](packages/collab-web) | Cliente web, host simulado y relay local de `/collab` |
+| [`browser-relay`](packages/browser-relay) | Extensión de Chrome para que el agente use pestañas ya abiertas |
+| [`metaharness`](packages/metaharness), [`typescript-edit-benchmark`](packages/typescript-edit-benchmark) | Bancos de pruebas |
 
-The [Agent Client Protocol](https://github.com/zed-industries/agent-client-protocol) over JSON-RPC. When the editor advertises capabilities, tool I/O routes through it and writes are gated by `session/request_permission`.
+`python/robomp` (bot de mantenimiento de PRs de upstream) e `infra/` también se heredan del proyecto original.
 
-| omp tool     | ACP route                           |
-| ------------ | ----------------------------------- |
-| `bash`       | `terminal/create + terminal/output` |
-| `read`       | `fs/read_text_file`                 |
-| `write`      | `fs/write_text_file`                |
-| `edit, bash` | `session/request_permission`        |
+### Crates de Rust
 
-Full reference: [omp.sh/docs/sdk](https://omp.sh/docs/sdk).
+El rendimiento crítico (búsqueda, shell, AST, PTY, control de escritorio) corre dentro del proceso, sin `fork/exec` en el camino caliente. Plataformas: `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64` y `win32-arm64`.
 
-## A harness worth keeping is one you _don't_ outgrow.
+| Crate | Descripción |
+| --- | --- |
+| [`pi-natives`](crates/pi-natives) | Addon N-API que agrega al resto |
+| [`pi-shell`](crates/pi-shell) | Bash 5.3 embebido: sesiones persistentes, PTY y gestión de procesos |
+| [`pi-builtins`](crates/pi-builtins) | Builtins de bash y utilidades de línea de comandos en proceso |
+| [`pi-edit`](crates/pi-edit) | Motor de la herramienta `edit`: parches anclados, previsualización en streaming y aplicación atómica |
+| [`pi-ast`](crates/pi-ast) | Resúmenes y consultas tree-sitter (más de 50 gramáticas) |
+| [`pi-iso`](crates/pi-iso) | Aislamiento de workspace para subagentes: APFS, reflink, overlayfs, projfs |
+| [`pi-walker`](crates/pi-walker) | Recorrido paralelo respetando `.gitignore`, con caché compartida |
+| [`pi-voice`](crates/pi-voice) | Captura y reproducción de audio, Opus y WebRTC |
+| [`crates/vendor`](crates/vendor) | Dependencias de terceros vendorizadas (`jaq-*`, `grep-searcher`, `tree-sitter-go`, `napi`, `cfg_aliases`) |
 
-Pick it up at **[omp.sh](https://omp.sh)**.
+## Documentación
 
-omp is a fork of [Pi](https://github.com/badlogic/pi-mono) by [Mario Zechner](https://github.com/mariozechner), rewritten as a coding-first surface: sessions, subagents, slash commands, extensions — all TypeScript, all MIT, all on [GitHub](https://github.com/can1357/oh-my-pi). Shape it from config, hook it from outside, or read the source when you need to.
+Todo en [`docs/`](docs/). Puntos de partida:
 
-### Primitives
+| Tema | Documento |
+| --- | --- |
+| Modelos, proveedores y gateway | [`models.md`](docs/models.md), [`providers.md`](docs/providers.md), [`auth-broker-gateway.md`](docs/auth-broker-gateway.md) |
+| Seguridad | [`approval-mode.md`](docs/approval-mode.md), [`secrets.md`](docs/secrets.md) |
+| Protocolo RPC y SDK | [`rpc.md`](docs/rpc.md), [`sdk.md`](docs/sdk.md) |
+| Skills, MCP, hooks y reglas | [`skills.md`](docs/skills.md), [`mcp-config.md`](docs/mcp-config.md), [`hooks.md`](docs/hooks.md), [`context-files.md`](docs/context-files.md) |
+| Sesiones, memoria y compactación | [`session.md`](docs/session.md), [`memory.md`](docs/memory.md), [`compaction.md`](docs/compaction.md) |
+| Análisis comparativos de producto | [`codex-vs-omp-analisis.md`](docs/codex-vs-omp-analisis.md), [`zcode-vs-omp-analisis.md`](docs/zcode-vs-omp-analisis.md), [`upstream-gap-analysis-v18.18.9.md`](docs/upstream-gap-analysis-v18.18.9.md) |
 
-An extension is a TypeScript module. Same tool API, same slash-command registry, same hotkey table, same TUI primitives the built-ins use. Nothing is reserved.
+## Desarrollo y contribución
 
-### Discovery
-
-On first run omp inherits whatever is already on disk: rules, skills, and MCP servers from `.claude`, `.cursor`, `.windsurf`, `.gemini`, `.codex`, `.cline`, `.github/copilot`, and `.vscode`. No migration script.
-
-### Extensibility
-
-Ask omp to write the piece you're missing, then `/reload-plugins`. Keep it local, ship it in a `marketplace`, or publish it to npm.
-
-## Philosophy
-
-omp is a fork of [pi-mono](https://github.com/badlogic/pi-mono) by [Mario Zechner](https://github.com/mariozechner), extended with a batteries-included coding workflow.
-
-Key ideas:
-
-- Keep interactive terminal-first UX for real coding work
-- Include practical built-ins (tools, sessions, branching, subagents, extensibility)
-- Make advanced behavior configurable rather than hidden
-
-### Project inputs and trust
-
-Opening a repository loads its project inputs by design: settings, extensions, hooks, tools, commands, skills, rules, and project MCP configuration. To exclude project `.mcp.json` for one invocation, pass `--config <file>` pointing at a YAML overlay with nested keys (a flat `mcp.enableProjectConfig: false` line is ignored):
-
-```yaml
-mcp:
-  enableProjectConfig: false
-```
-
-Use `--no-extensions` to skip ambient extension discovery; or use `--trusted-extension /absolute/path/to/file.ts` for an exact extension allowlist. `--no-tools` disables built-in tools, but project tool modules remain a separate discovery surface. These flags narrow inputs without changing the repository-trust model.
-
----
-
-## Development
-
-### Getting started from source
-
-Fresh clones need both workspace dependencies and the local Rust/N-API addon before the source CLI can start.
+Los cambios se proponen por *pull request* a este repositorio. Antes de empezar, lee [`AGENTS.md`](AGENTS.md) (reglas de código, pruebas y logging) y [`CONTRIBUTING.md`](CONTRIBUTING.md), texto heredado de upstream: sus referencias a Discord y a los flujos del proyecto original no aplican a esta distribución.
 
 ```sh
-bun setup
-bun dev
+bun run check      # tipos y lint (TypeScript y Rust)
+bun run test       # pruebas de TypeScript
+bun run lint
+bun run fmt
 ```
 
-`bun setup` installs Bun workspaces and builds `@oh-my-pi/pi-natives`. Re-run `bun run build:native` after changing Rust crates or `packages/natives`.
+- Las novedades visibles para el usuario se anotan bajo `## [Unreleased]` en `packages/*/CHANGELOG.md`; las secciones ya publicadas no se modifican.
+- Mensajes de commit al estilo convencional con el paquete entre paréntesis, p. ej. `feat(vscode): …` o `fix(coding-agent): …`.
+- No se editan a mano `packages/catalog/src/models.json` ni `packages/catalog/src/compat/rules.json`: se regeneran con `bun run gen:models` y `bun run gen:compat`.
+- Para depurar el agente en ejecución, `/debug` abre las herramientas de diagnóstico, informes y perfilado.
 
-Nix users get the pinned Bun and Rust toolchains plus all native build dependencies:
+## Licencia y atribución
 
-```sh
-nix develop
-bun setup
-bun dev
-```
-
-Build and smoke-test the distributable Nix package with `nix build .#omp`. Wayland screencast support is off by default (linking libpipewire adds ~750 MB of runtime closure); enable it with `omp.override { withWaylandScreencast = true; }`. `nix/bun.nix` is generated only when `bun.lock` changes; releases regenerate it automatically. For dependency changes, run:
-
-```sh
-bun run gen:nix
-```
-
-The command uses `bun2nix` from `nix develop` when available, otherwise enters the development shell through Nix, then falls back to the pinned `bunx bun2nix@2.1.2`. Do not edit `nix/bun.nix` manually.
-
-For a non-interactive smoke check:
-
-```sh
-bun dev -- --version
-```
-
-### Debug Command
-
-`/debug` opens tools for debugging, reporting, and profiling.
-
-For architecture and contribution guidelines, see [packages/coding-agent/DEVELOPMENT.md](packages/coding-agent/DEVELOPMENT.md).
-
----
-
-## Monorepo Packages
-
-| Package                                                                       | Description                                                                 |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| **[@oh-my-pi/collab-web](packages/collab-web)**                               | Browser guest client, mock host, and local relay for collab live sessions   |
-| **[@oh-my-pi/pi-ai](packages/ai)**                                            | Multi-provider LLM client with streaming and model/provider integration     |
-| **[@oh-my-pi/pi-catalog](packages/catalog)**                                  | Model catalog: bundled model database, provider descriptors, and identity   |
-| **[@oh-my-pi/pi-agent-core](packages/agent)**                                 | Agent runtime with tool calling and state management                        |
-| **[@oh-my-pi/pi-coding-agent](packages/coding-agent)**                        | Interactive coding agent CLI and SDK                                        |
-| **[@oh-my-pi/pi-tui](packages/tui)**                                          | Terminal UI library with differential rendering                             |
-| **[@oh-my-pi/pi-natives](packages/natives)**                                  | N-API bindings for grep, shell, image, text, syntax highlighting, and more  |
-| **[@oh-my-pi/omp-stats](packages/stats)**                                     | Local observability dashboard for AI usage statistics                       |
-| **[@oh-my-pi/omptype](packages/omptype)**                                     | ArkType-compatible schema validation with lazy JIT compilation              |
-| **[@oh-my-pi/pi-utils](packages/utils)**                                      | Shared utilities (logging, streams, dirs/env/process helpers)               |
-| **[@oh-my-pi/pi-wire](packages/wire)**                                        | Shared collab live-session protocol types and relay constants               |
-| **[@oh-my-pi/pi-mnemopi](packages/mnemopi)**                                  | Local SQLite memory engine for omp agents                                   |
-| **[@oh-my-pi/snapcompact](packages/snapcompact)**                             | Bitmap-frame context compression package and SQuAD eval suite               |
-| **[@oh-my-pi/browser-relay](packages/browser-relay)**                         | Chrome extension that lets the Eval browser API drive your existing tabs    |
-| **[@oh-my-pi/pi-metaharness](packages/metaharness)**                          | Unified benchmark runners, Harbor run storage, REST/SSE API, live dashboard |
-| **[@oh-my-pi/typescript-edit-benchmark](packages/typescript-edit-benchmark)** | Edit benchmark suite built on TypeScript source mutations                   |
-
-### Rust Crates
-
-| Crate                                              | Description                                                                                         |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **[pi-natives](crates/pi-natives)**                | Core Rust native addon (N-API `cdylib`) used by `@oh-my-pi/pi-natives`; aggregates the crates below |
-| **[pi-shell](crates/pi-shell)**                    | Embedded shell / PTY / process management split out of `pi-natives` (wraps `brush-*`)               |
-| **[pi-ast](crates/pi-ast)**                        | tree-sitter-based code summarizer and AST utilities (50+ language grammars)                         |
-| **[pi-iso](crates/pi-iso)**                        | Task isolation backend resolver: APFS clones, btrfs/zfs reflinks, overlayfs, projfs, rcopy          |
-| **[pi-voice](crates/pi-voice)**                    | Audio capture/playback, Opus codecs, and live WebRTC streaming primitives                           |
-| **[pi-walker](crates/pi-walker)**                  | Parallel ignore-aware filesystem walker with the scan cache shared by grep, glob, and workspace     |
-| **[pi-edit](crates/pi-edit)**                      | Edit engine behind the `edit` tool: line-anchored patch/hashline modes, streaming previews, atomic apply |
-| **[brush-core](crates/vendor/brush-core)**         | Vendored fork of [brush-shell](https://github.com/reubeno/brush) for embedded bash execution        |
-| **[pi-builtins](crates/pi-builtins)**              | Bash builtins (cd, echo, test, printf, read, export, …) plus 67 in-process command-line utilities |
-
-## Contributing
-
-Issues and pull requests are open to everyone. Open PRs are currently a
-**trial** — the previous vouch requirement is lifted while we evaluate how it
-goes, and it may return. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for
-guidelines on contributing.
-
----
-
-## License
-
-OMP is licensed under the [MIT License](LICENSE).
-
-Third-party and vendored code, including `crates/vendor/brush-core` and the
-third-party portions identified in `crates/pi-builtins/LICENSE`, remains under
-its respective upstream license. See `THIRD-PARTY-NOTICES.txt` and
-component-local notices for attribution and additional terms.
+MIT, según [`LICENSE`](LICENSE). El código de terceros y el vendorizado (`crates/vendor/*`) y las partes señaladas en `crates/pi-builtins/LICENSE` y `crates/pi-shell/NOTICE` conservan su licencia original; ver `THIRD-PARTY-NOTICES.txt` y los avisos locales de cada componente.
 
 © 2025 Mario Zechner  
 © 2025-2026 Can Bölük  
 © 2026 [Stencil Labs, Inc.](https://stencil.so)
 
-_made for terminals that stay open_
-
-- [omp.sh](https://omp.sh)
-- [Stencil Labs](https://stencil.so)
-- [GitHub](https://github.com/can1357/oh-my-pi)
-- [Changelog](https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md)
-- [npm](https://www.npmjs.com/package/@oh-my-pi/pi-coding-agent)
-- [Discord](https://discord.gg/4NMW9cdXZa)
-- [MIT](https://github.com/can1357/oh-my-pi/blob/main/LICENSE)
+MarIA Code se construye sobre su trabajo y mantiene sus avisos de copyright, como exige la licencia.
