@@ -564,8 +564,8 @@ export class HistoryPanel {
 		remove.classList.replace("history-row-button", "history-card-delete");
 		if (!editing) {
 			front.append(info, remove);
-			// Only a read chat that is not the open one or working: those are already seen or will light up when done.
-			if (item.activity === undefined && !item.active) front.append(this.#markUnreadButton(item));
+			// Only a read chat that is not working (it lights up when done); the open one too, to come back to it later.
+			if (item.activity === undefined) front.append(this.#markUnreadButton(item));
 			back.append(faceButton("close", "Hide details"));
 		}
 		const card = h(

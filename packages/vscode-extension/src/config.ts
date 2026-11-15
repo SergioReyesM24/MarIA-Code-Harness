@@ -24,7 +24,7 @@ export function readConfig() {
 		/** Lines over which pasted text and sent prompts fold (`0` never folds). */
 		longPasteLines: longPasteLimit(config.get<number>("longPasteLines", 200), 200),
 		/** Characters over which pasted text and sent prompts fold, so one very long line folds too (`0` ignores length). */
-		longPasteChars: longPasteLimit(config.get<number>("longPasteChars", 200), 200),
+		longPasteChars: longPasteLimit(config.get<number>("longPasteChars", 2000), 2000),
 		/** Folder chats without a workspace run in (see no-workspace.ts); may start with `~`. */
 		noWorkspaceFolder: config.get<string>("noWorkspaceFolder", "~/omp-sin-workspace").trim() || "~/omp-sin-workspace",
 	};

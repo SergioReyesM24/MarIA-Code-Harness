@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.42.0]
+
+### Added
+
+- A paste over the limits below folds into a card above the composer ("Texto pegado · 320 líneas · 12.4 KB") with its first lines; "Ver y editar" shows the whole text to change it and the chevron folds it again, and it is sent after what you typed. Ctrl+Shift+V (Cmd+Shift+V on macOS) pastes the same text as plain text in the input instead of a card. Sent prompts over the same length fold in their bubble with "Mostrar todo" and "Plegar". The limits are `ompCustom.longPasteChars` (2000 characters) and `ompCustom.longPasteLines` (200 lines); `0` turns either one off ([#5](https://github.com/javimp2003/MarIA-Code-Harness/pull/5) by [@ManoloMB](https://github.com/ManoloMB))
+
+### Changed
+
+- The open chat's Today card also has the "Mark as unread" envelope, so you can leave the current chat for later from the history; it reads again when you open it from the history or send it a message
+
 ## [0.41.0]
 
 ### Added
@@ -14,11 +24,6 @@
 
 - Right-clicking a file path or link in an answer now offers "Copiar ruta" / "Copiar enlace"; before, the menu's Copy did nothing because a right click selects no text
 - The prompts under the logo of a new chat are now centred (their text was left-aligned inside a centred block, so the list looked shifted to the left)
-## [Unreleased]
-
-### Added
-
-- A paste over the limits below folds into a card above the composer ("Texto pegado · 320 líneas · 12.4 KB") with its first lines; "Ver y editar" shows the whole text to change it and the chevron folds it again, and it is sent after what you typed. Sent prompts over the same length fold in their bubble with "Mostrar todo" and "Plegar". The limits are `ompCustom.longPasteChars` (200 characters) and `ompCustom.longPasteLines` (200 lines); `0` turns either one off ([#5](https://github.com/javimp2003/MarIA-Code-Harness/pull/5) by [@ManoloMB](https://github.com/ManoloMB))
 
 ## [0.40.1]
 

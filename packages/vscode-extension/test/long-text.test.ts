@@ -13,18 +13,18 @@ describe("long text folding", () => {
 		const exactly = Array.from({ length: 200 }, (_, i) => `line ${i}`).join("\n");
 		expect(isLongText(exactly)).toBe(false);
 		expect(isLongText(`${exactly}\nextra`)).toBe(true);
-		setLongTextLimits(200, 200);
+		setLongTextLimits(200, 2000);
 	});
 
 	test("folds one very long line by its characters, so a few lines are not a way around the limit", () => {
-		setLongTextLimits(200, 200);
-		expect(isLongText("x".repeat(200))).toBe(false);
-		expect(isLongText("x".repeat(201))).toBe(true);
+		setLongTextLimits(200, 2000);
+		expect(isLongText("x".repeat(2000))).toBe(false);
+		expect(isLongText("x".repeat(2001))).toBe(true);
 	});
 
 	test("a limit of 0 turns that limit off", () => {
 		setLongTextLimits(0, 0);
 		expect(isLongText(Array.from({ length: 5_000 }, () => "y").join("\n") + "x".repeat(50_000))).toBe(false);
-		setLongTextLimits(200, 200);
+		setLongTextLimits(200, 2000);
 	});
 });

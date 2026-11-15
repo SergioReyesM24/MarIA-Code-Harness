@@ -236,7 +236,11 @@ export class ChatSession implements vscode.Disposable, HostView {
 	 */
 	async switchSession(sessionFile: string): Promise<void> {
 		const current = this.#host;
-		if (current?.sessionFile === sessionFile && current.process) return;
+		if (current?.sessionFile === sessionFile && current.process) {
+			// Already shown, but the user may have marked it unread from the history: opening it reads it.
+			this.pool.seen(sessionFile);
+			return;
+		}
 		const existing = this.pool.find(sessionFile);
 		if (existing) {
 			this.showHost(existing);
@@ -537,6 +541,8 @@ export class ChatSession implements vscode.Disposable, HostView {
 				await this.examplePrompts.set(request.prompts);
 				return;
 			case "prompt":
+				// Writing in a chat marked unread from the history is coming back to it.
+				this.pool.seen(this.#host?.sessionFile);
 				await this.#requireHost().prompt(request.text, request.images);
 				return;
 			case "editMessage":

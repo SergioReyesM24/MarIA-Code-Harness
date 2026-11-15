@@ -809,7 +809,8 @@ export class Composer {
 			.map(item => item.getAsFile())
 			.filter((file): file is File => file !== null);
 		if (files.length === 0) {
-			// A long text folds into a card above the input instead of filling the textarea.
+			// A long text folds into a card above the input instead of filling the textarea
+			// (Ctrl/Cmd+Shift+V pastes it as typed text instead, see `#pastePlain`).
 			const text = data.getData("text/plain");
 			if (!isLongText(text)) return;
 			event.preventDefault();
@@ -829,6 +830,29 @@ export class Composer {
 				},
 				() => this.showNotice("warning", `Could not read the pasted image (${file.type}).`),
 			);
+		}
+	}
+
+	/**
+	 * Ctrl/Cmd+Shift+V: the clipboard's text goes into the input as typed text, never folded into a
+	 * card. VS Code's webview host cancels that shortcut's native paste, so the text is read here.
+	 */
+	async #pastePlain(): Promise<void> {
+		let text: string;
+		try {
+			text = await navigator.clipboard.readText();
+		} catch {
+			this.showNotice("warning", "No se pudo leer el portapapeles.");
+			return;
+		}
+		if (text === "") return;
+		this.#input.focus();
+		// `insertText` keeps the paste on the textarea's undo stack (Ctrl+Z) and fires `input`.
+		if (!document.execCommand("insertText", false, text)) {
+			const { selectionStart, selectionEnd } = this.#input;
+			this.#input.setRangeText(text, selectionStart, selectionEnd, "end");
+			this.#historyIndex = -1;
+			this.#onInput();
 		}
 	}
 
@@ -958,6 +982,13 @@ export class Composer {
 		if (this.#enhance.running) {
 			if (event.key === "Escape" || (event.key === "Enter" && !event.shiftKey)) event.preventDefault();
 			if (event.key === "Escape") this.#enhance.cancel();
+			return;
+		}
+		if ((event.ctrlKey || event.metaKey) && event.shiftKey && !event.altKey && event.key.toLowerCase() === "v") {
+			// Stopped here so VS Code's webview host neither cancels it nor runs a workbench keybinding.
+			event.preventDefault();
+			event.stopPropagation();
+			void this.#pastePlain();
 			return;
 		}
 		const popupOpen = !this.#popup.hidden;

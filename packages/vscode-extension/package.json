@@ -2,7 +2,7 @@
 	"name": "maria-code",
 	"displayName": "MarIA Code",
 	"description": "MarIA Code, the coding agent for Unicaja developers: chat, sessions, models and settings inside VS Code",
-	"version": "0.41.0",
+	"version": "0.42.0",
 	"private": true,
 	"publisher": "javimp2003",
 	"license": "MIT",
@@ -505,9 +505,9 @@
 				},
 				"ompCustom.longPasteChars": {
 					"type": "integer",
-					"default": 200,
+					"default": 2000,
 					"minimum": 0,
-					"markdownDescription": "Text longer than this many characters folds, like `#ompCustom.longPasteLines#`: a paste becomes a card and a sent prompt folds in its bubble. It also catches a single very long line (a minified JSON or a base64 blob). `0` turns this limit off."
+					"markdownDescription": "Text longer than this many characters folds, like `#ompCustom.longPasteLines#`: a paste becomes a card and a sent prompt folds in its bubble. It also catches a single very long line (a minified JSON or a base64 blob). Ctrl+Shift+V (Cmd+Shift+V on macOS) pastes as plain text in the input, never as a card. `0` turns this limit off."
 				}
 			}
 		}
