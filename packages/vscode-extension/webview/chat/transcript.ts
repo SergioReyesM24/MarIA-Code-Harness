@@ -16,13 +16,14 @@ import type {
 } from "../../src/protocol";
 import { isSkillPromptDetails, isUserPrompt, type SkillPromptDetails, skillPromptDraft } from "../../src/protocol";
 import { parseQuotedPrompt, type QuotedPrompt, quotedPrompt } from "../../src/quoted-prompt";
-import { h, iconButton } from "../dom";
+import { button, h, iconButton } from "../dom";
 import { icon } from "../icons";
 import { setTooltip } from "../tooltip";
 import { fileLink, handleMarkdownClick, thumbnail } from "./content";
 import { ChatName } from "./chat-name";
 import { ExamplePrompts } from "./example-prompts";
 import { openLightbox } from "./lightbox";
+import { countLines, isLongText } from "./long-text";
 import { playFarewell, preloadFarewell } from "./logo-farewell";
 import { renderMarkdown } from "./markdown";
 import { MessageEditor } from "./message-editor";
@@ -115,6 +116,23 @@ function contentImages(content: string | Array<{ type: string }>): ImageContent[
 	return typeof content === "string" ? [] : (content.filter(block => block.type === "image") as ImageContent[]);
 }
 
+/**
+ * A long prompt's text folds to a few lines with a toggle that shows all of it or folds it again.
+ * Short text is returned as it is.
+ */
+function foldLong(content: HTMLElement, text: string): HTMLElement {
+	if (!isLongText(text)) return content;
+	const lines = countLines(text);
+	content.classList.add("folded");
+	const toggle = button(`Mostrar todo · ${lines} líneas`, "link-button fold-toggle", () => {
+		const folded = content.classList.toggle("folded");
+		toggle.textContent = folded ? `Mostrar todo · ${lines} líneas` : "Plegar";
+		toggle.ariaExpanded = String(!folded);
+	});
+	toggle.ariaExpanded = "false";
+	return h("div", { className: "bubble-long" }, content, toggle);
+}
+
 /** A prompt's bubble: the excerpt it replies to, plain text (pre-wrapped) with `@path` mentions as file links, and image thumbnails. */
 function bubble(text: string, images: ImageContent[], onEdit?: () => void, quote?: string): HTMLElement {
 	const el = h("div", { className: "msg user" });
@@ -126,7 +144,7 @@ function bubble(text: string, images: ImageContent[], onEdit?: () => void, quote
 		const content = h("div", { className: "bubble-text" });
 		for (const part of splitMentions(text))
 			content.append(typeof part === "string" ? part : fileLink(part.path, part.label));
-		body.append(content);
+		body.append(foldLong(content, text));
 	}
 	if (images.length > 0) {
 		body.append(h("div", { className: "thumbs" }, ...images.map(image => thumbnail(image))));

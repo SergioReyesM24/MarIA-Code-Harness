@@ -378,7 +378,9 @@ export type ChatUpdate =
 	/** omp's task list (`todo`) of the shown session, phases without tasks left out; empty when there is none (or a new task started after it finished). */
 	| { type: "todos"; phases: TodoPhase[] }
 	/** The empty chat's prompts under the logo; `custom` when they are the user's saved list rather than the defaults. */
-	| { type: "examplePrompts"; prompts: string[]; custom: boolean };
+	| { type: "examplePrompts"; prompts: string[]; custom: boolean }
+	/** The `ompCustom.longPasteLines` and `ompCustom.longPasteChars` settings: text over either limit folds (`0` turns that limit off). */
+	| { type: "settings"; longPasteLines: number; longPasteChars: number };
 
 /** Chat webview → host. */
 export type ChatRequest =

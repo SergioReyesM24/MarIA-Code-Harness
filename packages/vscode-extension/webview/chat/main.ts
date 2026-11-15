@@ -14,6 +14,7 @@ import { HistoryPanel } from "./history";
 import { FindBar } from "./find";
 import { installLinkContextMenu } from "./link-menu";
 import { PlanFeedbackDialog } from "./plan-feedback";
+import { setLongTextLimits } from "./long-text";
 import { Transcript, brailleSpinner } from "./transcript";
 
 type ChatViewState = Partial<ComposerState>;
@@ -215,6 +216,9 @@ function handle(update: ChatUpdate): void {
 			break;
 		case "examplePrompts":
 			transcript.examples.set(update.prompts, update.custom);
+			break;
+		case "settings":
+			setLongTextLimits(update.longPasteLines, update.longPasteChars);
 			break;
 		case "thinkingLevels":
 			composer.picker.setThinkingLevels(update.levels);

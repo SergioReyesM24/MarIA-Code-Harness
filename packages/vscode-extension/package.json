@@ -496,6 +496,18 @@
 					"type": "string",
 					"default": "auto",
 					"markdownDescription": "Language you speak to the microphone button, as an ISO 639-1 code (`es`, `en`, …). `auto` lets the speech model detect it; a fixed language is more accurate on short phrases."
+				},
+				"ompCustom.longPasteLines": {
+					"type": "integer",
+					"default": 200,
+					"minimum": 0,
+					"markdownDescription": "Text longer than this many lines folds: a paste into the chat becomes a card you can open to edit, and a sent prompt folds in its bubble with a *Show all* button. Applies to later pastes and prompts. `0` turns this limit off."
+				},
+				"ompCustom.longPasteChars": {
+					"type": "integer",
+					"default": 200,
+					"minimum": 0,
+					"markdownDescription": "Text longer than this many characters folds, like `#ompCustom.longPasteLines#`: a paste becomes a card and a sent prompt folds in its bubble. It also catches a single very long line (a minified JSON or a base64 blob). `0` turns this limit off."
 				}
 			}
 		}

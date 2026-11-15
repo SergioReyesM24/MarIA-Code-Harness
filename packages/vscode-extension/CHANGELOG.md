@@ -14,6 +14,11 @@
 
 - Right-clicking a file path or link in an answer now offers "Copiar ruta" / "Copiar enlace"; before, the menu's Copy did nothing because a right click selects no text
 - The prompts under the logo of a new chat are now centred (their text was left-aligned inside a centred block, so the list looked shifted to the left)
+## [Unreleased]
+
+### Added
+
+- A paste over the limits below folds into a card above the composer ("Texto pegado · 320 líneas · 12.4 KB") with its first lines; "Ver y editar" shows the whole text to change it and the chevron folds it again, and it is sent after what you typed. Sent prompts over the same length fold in their bubble with "Mostrar todo" and "Plegar". The limits are `ompCustom.longPasteChars` (200 characters) and `ompCustom.longPasteLines` (200 lines); `0` turns either one off ([#5](https://github.com/javimp2003/MarIA-Code-Harness/pull/5) by [@ManoloMB](https://github.com/ManoloMB))
 
 ## [0.40.1]
 
