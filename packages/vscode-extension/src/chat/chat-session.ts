@@ -27,6 +27,7 @@ import {
 	type EditPlan,
 	errorMessage,
 	type FileRestore,
+	type ForkTarget,
 	type HostView,
 	type SessionTarget,
 } from "./agent-host";
@@ -42,6 +43,8 @@ export interface ChatSurface {
 	reveal(): void;
 	/** Open a new chat (without a workspace when `noWorkspace`) in another editor tab. */
 	openInNewTab(noWorkspace: boolean): void;
+	/** Open a new chat forked at one assistant message. */
+	openForkInNewTab(target: ForkTarget, noWorkspace: boolean): void;
 }
 
 /** Shown before the view has a process (it gets one as soon as it opens). */
@@ -156,6 +159,7 @@ export class ChatSession implements vscode.Disposable, HostView {
 		const host = this.pool.create(noWorkspace);
 		this.showHost(host);
 		await host.start(target);
+		if (target.kind === "fork") return;
 		// `--continue` picks the newest session, which another view may already have open:
 		// one process per session file, so join that one.
 		const twin = this.pool.find(host.sessionFile, host);
@@ -556,6 +560,12 @@ export class ChatSession implements vscode.Disposable, HostView {
 				}
 				this.pool.seen(host.sessionFile);
 				await this.#postSessions();
+				return;
+			}
+			case "branchMessage": {
+				const host = this.#requireHost();
+				const target = await host.forkTarget(request.timestamp);
+				this.surface.openForkInNewTab(target, host.noWorkspace);
 				return;
 			}
 			case "abort":

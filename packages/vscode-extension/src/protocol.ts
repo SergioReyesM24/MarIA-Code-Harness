@@ -396,6 +396,8 @@ export type ChatRequest =
 	| { type: "editMessage"; fromEnd: number; original: string; text: string }
 	/** Fork the current transcript into a new session. */
 	| { type: "forkSession" }
+	/** Open a new chat forked from an assistant message. */
+	| { type: "branchMessage"; timestamp: number }
 	| { type: "abort" }
 	/** Start a new chat; `noWorkspace` starts one without a workspace (see no-workspace.ts). */
 	| { type: "newSession"; noWorkspace?: boolean }

@@ -249,14 +249,16 @@ class AssistantView {
 	readonly element = h("div", { className: "msg assistant" });
 	#slots: Slot[] = [];
 	#footer = h("div", { className: "msg-footer" });
+	#actions = h("div", { className: "assistant-actions" });
 
 	constructor(
 		private readonly key: string,
 		private readonly card: (id: string) => ToolCard,
 		/** The composer's "expand all thinking" toggle is on. */
 		private readonly thinkingExpanded: () => boolean,
+		private readonly onBranchMessage: (timestamp: number) => void,
 	) {
-		this.element.append(this.#footer);
+		this.element.append(this.#footer, this.#actions);
 	}
 
 	update(message: AssistantMessage, streaming: boolean): void {
@@ -317,6 +319,12 @@ class AssistantView {
 			this.#footer.append(h("div", { className: "error-block" }, message.errorMessage || "The request failed."));
 		} else if (message.stopReason === "aborted") {
 			this.#footer.append(h("div", { className: "note" }, "Interrupted"));
+		}
+		this.#actions.replaceChildren();
+		if (!streaming && (message.stopReason === "stop" || message.stopReason === "length")) {
+			const branch = button("Branch in new chat", "assistant-branch", () => this.onBranchMessage(message.timestamp));
+			branch.prepend(icon("gitBranch"));
+			this.#actions.append(branch);
 		}
 	}
 
@@ -584,6 +592,7 @@ export class Transcript {
 					`h${this.#list.childElementCount}`,
 					id => this.#card(id),
 					() => this.#thinkingExpanded,
+					timestamp => this.post({ type: "branchMessage", timestamp }),
 				);
 				view.update(message, false);
 				this.#list.append(view.element);
@@ -802,6 +811,7 @@ export class Transcript {
 					key,
 					id => this.#card(id),
 					() => this.#thinkingExpanded,
+					timestamp => this.post({ type: "branchMessage", timestamp }),
 				);
 				this.#live.set(key, view);
 				this.#list.append(view.element);

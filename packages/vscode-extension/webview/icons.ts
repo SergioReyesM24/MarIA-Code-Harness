@@ -36,6 +36,7 @@ export type IconName =
 	| "bash"
 	| "plusGlobe"
 	| "copyPlus"
+	| "gitBranch"
 	| "reply"
 	| "askBubble"
 	| "zap"
@@ -98,6 +99,8 @@ const PATHS: Record<IconName, string> = {
 	// Two stacked squares with a plus (Lucide "copy-plus"): a new chat in another tab.
 	copyPlus:
 		"M15 12v6M12 15h6M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2zM4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2",
+	gitBranch:
+		"M21 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM9 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6 9v12M15 6a3 3 0 0 0-3 3v3a3 3 0 0 1-3 3H6",
 	reply: "m9 17-5-5 5-5M20 18v-2a4 4 0 0 0-4-4H4",
 	// A speech bubble with a question mark (Lucide "message-circle-question"): "Ask something" about a selection.
 	askBubble: "M7.9 20A9 9 0 1 0 4 16.1L2 22ZM9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01",

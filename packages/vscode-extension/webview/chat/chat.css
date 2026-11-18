@@ -798,6 +798,34 @@ code {
 	gap: 6px;
 }
 
+.assistant-actions {
+	padding-left: 20px;
+}
+
+.assistant-branch {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 10px;
+	border: 1px solid var(--c-border-heavy);
+	border-radius: 9999px;
+	background: var(--menu-bg);
+	color: var(--c-fg-2);
+	font: inherit;
+	font-size: var(--fs-sm);
+	cursor: pointer;
+}
+
+.assistant-branch:hover {
+	background: var(--c-hover);
+	color: var(--c-fg);
+}
+
+.assistant-branch .icon {
+	width: 14px;
+	height: 14px;
+}
+
 /*
  * Each tool round trip is its own assistant message (thinking + call, then
  * thinking + answer). Back to back, they read as one turn: close the 14px gap

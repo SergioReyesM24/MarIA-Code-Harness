@@ -4,7 +4,7 @@
 
 ### Added
 
-- `/fork` in the chat starts a separate session from the current conversation
+- `/fork` starts a session from the current conversation, and each answer can branch into a new chat
 
 ## [0.42.0]
 
