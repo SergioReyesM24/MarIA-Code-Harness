@@ -548,6 +548,16 @@ export class ChatSession implements vscode.Disposable, HostView {
 			case "editMessage":
 				await this.#editMessage(request.fromEnd, request.original, request.text);
 				return;
+			case "forkSession": {
+				const host = this.#requireHost();
+				if (!(await host.fork())) {
+					this.#notice("warning", "No se pudo crear el fork de esta sesión.");
+					return;
+				}
+				this.pool.seen(host.sessionFile);
+				await this.#postSessions();
+				return;
+			}
 			case "abort":
 				await this.abort();
 				return;

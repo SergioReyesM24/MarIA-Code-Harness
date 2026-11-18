@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- `/fork` in the chat starts a separate session from the current conversation
+
 ## [0.42.0]
 
 ### Added

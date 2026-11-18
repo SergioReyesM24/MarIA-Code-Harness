@@ -432,12 +432,7 @@ export class AgentHost implements vscode.Disposable {
 		const process = this.#requireProcess();
 		const result = await process.request("new_session", {});
 		if (result.cancelled) return;
-		this.#title = undefined;
-		this.#setCuration(CURATION_IDLE);
-		this.#resetSubagents();
-		this.#resetJobs();
-		await this.#sendSnapshot(process, this.#views);
-		void this.#refreshJobs();
+		await this.#afterSessionChange(process);
 	}
 
 	/** Open another session in this process. Aborts a running turn: callers only use it when idle. */
@@ -449,6 +444,19 @@ export class AgentHost implements vscode.Disposable {
 		}
 		const result = await process.request("switch_session", { sessionPath: sessionFile });
 		if (result.cancelled) return;
+		await this.#afterSessionChange(process);
+	}
+
+	/** Fork the current transcript into a new session in the same process. */
+	async fork(): Promise<boolean> {
+		const process = this.#requireProcess();
+		const result = await process.request("fork", {});
+		if (result.cancelled) return false;
+		await this.#afterSessionChange(process);
+		return true;
+	}
+
+	async #afterSessionChange(process: OmpProcess): Promise<void> {
 		this.#title = undefined;
 		this.#resetSubagents();
 		this.#resetJobs();
