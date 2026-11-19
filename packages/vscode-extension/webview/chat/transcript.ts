@@ -134,7 +134,18 @@ function assistantActions(text: string, timestamp: number, onBranch: (timestamp:
 	branch.prepend(icon("gitBranch"));
 	const menu = h("div", { className: "assistant-action-menu", role: "menu", ariaLabel: "Message actions" }, branch);
 	overflow.append(toggle, menu);
-	overflow.addEventListener("toggle", () => (toggle.ariaExpanded = String(overflow.open)));
+	overflow.addEventListener("toggle", () => {
+		toggle.ariaExpanded = String(overflow.open);
+		if (!overflow.open) return;
+
+		const margin = 8;
+		const menuBounds = menu.getBoundingClientRect();
+		const toggleBounds = toggle.getBoundingClientRect();
+		const ownerBounds = overflow.getBoundingClientRect();
+		const maxLeft = Math.max(margin, window.innerWidth - menuBounds.width - margin);
+		const left = Math.min(Math.max(toggleBounds.left, margin), maxLeft);
+		menu.style.left = `${left - ownerBounds.left}px`;
+	});
 	overflow.addEventListener("keydown", event => {
 		if (event.key !== "Escape") return;
 		event.preventDefault();
