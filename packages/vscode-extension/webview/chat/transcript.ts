@@ -95,13 +95,68 @@ function turnFooter(ms: number): HTMLElement {
  * whose icon turns into a check after copying.
  */
 function messageActions(text: string, onEdit?: () => void): HTMLElement {
+	return h(
+		"div",
+		{ className: "msg-actions" },
+		onEdit && iconButton("pencil", "Edit message", onEdit),
+		copyButton(text),
+	);
+}
+
+function copyButton(text: string): HTMLButtonElement {
 	const copy = iconButton("copy", "Copy message", () => {
 		void navigator.clipboard.writeText(text).then(() => {
 			copy.replaceChildren(icon("check"));
 			setTimeout(() => copy.replaceChildren(icon("copy")), 1200);
 		});
 	});
-	return h("div", { className: "msg-actions" }, onEdit && iconButton("pencil", "Edit message", onEdit), copy);
+	return copy;
+}
+
+function assistantActions(text: string, timestamp: number, onBranch: (timestamp: number) => void): HTMLDivElement {
+	const overflow = h("details", { className: "assistant-overflow" });
+	const toggle = h(
+		"summary",
+		{
+			className: "icon-button",
+			ariaLabel: "More actions",
+			ariaHasPopup: "menu",
+			ariaExpanded: "false",
+			dataset: { tooltip: "More actions" },
+		},
+		icon("ellipsis"),
+	);
+	const branch = button("Branch in new chat", "assistant-menu-item", () => {
+		overflow.open = false;
+		onBranch(timestamp);
+	});
+	branch.role = "menuitem";
+	branch.prepend(icon("gitBranch"));
+	const menu = h("div", { className: "assistant-action-menu", role: "menu", ariaLabel: "Message actions" }, branch);
+	overflow.append(toggle, menu);
+	overflow.addEventListener("toggle", () => (toggle.ariaExpanded = String(overflow.open)));
+	overflow.addEventListener("keydown", event => {
+		if (event.key !== "Escape") return;
+		event.preventDefault();
+		overflow.open = false;
+		toggle.focus();
+	});
+	return h("div", { className: "assistant-actions" }, copyButton(text), overflow);
+}
+
+/** Close a message menu when the user clicks elsewhere in the webview. */
+export function installAssistantActionMenus(): void {
+	document.addEventListener(
+		"pointerdown",
+		event => {
+			const target = event.target;
+			if (!(target instanceof Node)) return;
+			for (const menu of document.querySelectorAll<HTMLDetailsElement>(".assistant-overflow[open]")) {
+				if (!menu.contains(target)) menu.open = false;
+			}
+		},
+		true,
+	);
 }
 
 function contentText(content: string | Array<{ type: string; text?: string }>): string {
@@ -322,9 +377,9 @@ class AssistantView {
 		}
 		this.#actions.replaceChildren();
 		if (!streaming && (message.stopReason === "stop" || message.stopReason === "length")) {
-			const branch = button("Branch in new chat", "assistant-branch", () => this.onBranchMessage(message.timestamp));
-			branch.prepend(icon("gitBranch"));
-			this.#actions.append(branch);
+			const actions = assistantActions(contentText(message.content ?? []), message.timestamp, this.onBranchMessage);
+			this.#actions.replaceWith(actions);
+			this.#actions = actions;
 		}
 	}
 

@@ -16,7 +16,7 @@ import { chatLocalCommands } from "./local-commands";
 import { installLinkContextMenu } from "./link-menu";
 import { PlanFeedbackDialog } from "./plan-feedback";
 import { setLongTextLimits } from "./long-text";
-import { Transcript, brailleSpinner } from "./transcript";
+import { installAssistantActionMenus, Transcript, brailleSpinner } from "./transcript";
 
 type ChatViewState = Partial<ComposerState>;
 
@@ -81,6 +81,7 @@ const root = document.getElementById("root")!;
 root.classList.add("chat");
 installTooltips();
 installLinkContextMenu();
+installAssistantActionMenus();
 const main = h("div", { className: "main" }, transcript.element, find.element, statusPanel, history.element);
 // Questions from omp cover this chat (transcript and composer), not the header with the History and new chats.
 const askDialog = new AskDialog(post, () => composer.cancelDictation(), [main, composer.element]);

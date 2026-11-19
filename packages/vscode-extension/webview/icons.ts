@@ -14,6 +14,7 @@ export type IconName =
 	| "chevronRight"
 	| "back"
 	| "copy"
+	| "ellipsis"
 	| "check"
 	| "search"
 	| "terminal"
@@ -69,6 +70,7 @@ const PATHS: Record<IconName, string> = {
 	chevronRight: "m9 18 6-6-6-6",
 	back: "M19 12H5M12 19l-7-7 7-7",
 	copy: "M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2zM4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",
+	ellipsis: "M5 12h.01M12 12h.01M19 12h.01",
 	check: "M20 6 9 17l-5-5",
 	search: "M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0zM21 21l-4.3-4.3",
 	terminal: "m4 17 6-6-6-6M12 19h8",
