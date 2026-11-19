@@ -803,13 +803,6 @@ code {
 	align-items: center;
 	gap: 2px;
 	padding-left: 20px;
-	opacity: 0;
-	transition: opacity 0.1s;
-}
-
-.msg.assistant:hover .assistant-actions,
-.msg.assistant:focus-within .assistant-actions {
-	opacity: 1;
 }
 
 .assistant-actions .icon {
